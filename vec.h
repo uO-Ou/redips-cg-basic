@@ -88,6 +88,8 @@ public:
     Vec3<T>& operator-= (const T v) { x -= v, y -= v, z -= v; return *this; };
     Vec3<T>& operator-= (const Vec3<T> &v) { x -= v.x, y -= v.y, z -= v.z; return *this; };
 
+	static Vec3<T> bits(unsigned int value){ return Vec3<T>(T(value&4>0),T(value&2>0),T(value&1>0)); }
+
 	/*
     Vec3<T> operator* (const Mat33<T>& mat) const{
             return Vec3<T>((x*mat[0][0]+y*mat[1][0]+z*mat[2][0]),(x*mat[0][1]+y*mat[1][1]+z*mat[2][1]),(x*mat[0][2]+y*mat[1][2]+z*mat[2][2]));

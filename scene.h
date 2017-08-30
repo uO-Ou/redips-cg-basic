@@ -34,9 +34,9 @@ public:
 				const int3* indexes = &((*(triangles->faces_v))[0]);
 				for (int j = 0; j < faceCnt; j++){
 					  int3 idx = indexes[j];
-					  float4 pa = (triangles->transform * float4(vertices[idx[0]], 1.0f));
-					  float4 pb = (triangles->transform * float4(vertices[idx[1]], 1.0f));
-					  float4 pc = (triangles->transform * float4(vertices[idx[2]], 1.0f));
+					  float4 pa = (triangles->Transform() * float4(vertices[idx[0]], 1.0f));
+					  float4 pb = (triangles->Transform() * float4(vertices[idx[1]], 1.0f));
+					  float4 pc = (triangles->Transform() * float4(vertices[idx[2]], 1.0f));
 					  bool flaga = phc.project_old(pa, proja);
 					  bool flagb = phc.project_old(pb, projb);
 					  bool flagc = phc.project_old(pc, projc);
@@ -65,7 +65,7 @@ public:
 			image.at<cv::Vec3b>(y,x) = cv::Vec3b((color.x * 255), color.y * 255, color.z * 255);
 		}
 		clock_t finish = clock();
-		printf("phc raytracing cost %lf ms\n",(double)(finish-start)/CLOCKS_PER_SEC*1000);
+		printf("[ray-tracer] : cost %lf ms\n",(double)(finish-start)/CLOCKS_PER_SEC*1000);
 	}
 	void raytracing(MPC mpc){
 		image.create(mpc.mainphc->resolution.height(),mpc.mainphc->resolution.width(),CV_8UC3);
@@ -84,12 +84,7 @@ public:
 	void updateSceneBox(){
 		sceneBox.reset();
 		for (int i = 0; i < objects.size(); i++){
-			if (objects[i]->type == _triangle_){
-				Triangles * triangles = (Triangles*)objects[i];
-				for (int j = 0; j < triangles->vertCnt; j++){
-					sceneBox += (triangles->transform*float4((*(triangles->vertices))[j], 1.0f)).vec3();
-				}
-			}
+			sceneBox += objects[i]->aabb();
 		}
 	}
 
@@ -195,7 +190,7 @@ public:
 				}
 				if (litted){
 					float factor = (shadowRay.dir.dot(records.normal));
-					surfaceColor += lights[i].color * (MAX(0.0f, factor)) * mtl->diffuse * (1.0/records.distance) * 10;
+					surfaceColor += lights[i].color * (MAX(0.0f, factor)) * mtl->diffuse * (1.0/records.distance) * 20;
 				}
 			}
 		}

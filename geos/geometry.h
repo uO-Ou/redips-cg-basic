@@ -37,10 +37,14 @@ public:
 	float left() const { return lbb.x; }
 	float bottom() const { return lbb.y; }
 	float back() const { return lbb.z; }
-	
+	float xdim() const { return right() - left(); };
+	float ydim() const { return top() - bottom(); }
+	float zdim() const { return front() - back(); }
+	float3 dim() const { return float3(xdim(),ydim(),zdim()); };
 	float3 heart() const{ return (lbb + rtf)*0.5f; }
+	
 	friend std::ostream& operator<<(std::ostream& os, const BOX& box){
-		return (os << "box {" << "x : "<<box.left() << "-" << box.right() << " y : "<<box.bottom()<<"-"<<box.top() << " z : " <<box.front()<<"-"<<box.back() << "}" << std::endl);
+		return (os << "box {" << "x : "<<box.left() << "-" << box.right() << " y : "<<box.bottom()<<"-"<<box.top() << " z : " <<box.back()<<"-"<<box.front() << "}" << std::endl);
 	}
 };
 
@@ -84,6 +88,15 @@ public:
 		if (((d - c) ^ (p - c)) < 0.0f) return false;
 		if (((a - d) ^ (p - d)) < 0.0f) return false;
 		return true;
+	}
+	static Mat44f glOrtho(const BOX& box){
+		puts("glortho may wrong, debug later");
+		Mat44f ret;
+		ret[0][0] = 2.0f / box.xdim();      ret[0][3] = -((box.right() + box.left()) / box.xdim());
+		ret[1][1] = 2.0f / box.ydim();       ret[1][3] = -((box.top() + box.bottom()) / box.ydim());
+		ret[2][2] = 2.0f / box.zdim();      ret[2][3] = -((box.front() + box.back()) / box.zdim());
+		ret[3][3] = 1.0f;
+		return ret;
 	}
 };
 

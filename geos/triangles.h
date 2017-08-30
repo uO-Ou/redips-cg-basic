@@ -210,6 +210,7 @@ public:
 		vertices = &(mesh->vertices);
 		normals = &(mesh->normals);
 		texcoords = &(mesh->texcoords);
+		updateAABB();
 	}
 	Triangles(){
 		useTree = false;
@@ -236,8 +237,9 @@ public:
 
 		vertCnt = mesh->vertices.size();
 		faceCnt = mesh->faces_v.size();
+		updateAABB();
 	}
-
+	
 	bool intersect(const Ray& ray, HitRecord &record){
 		if (useTree){
 			rayBoxCnt = 0;
@@ -338,6 +340,13 @@ private:
 		bool hitr = (mtree.rchild[boxId] >= 0) ? (traverse(mtree.rchild[boxId], ray, boxCnt, records)) : false;
 
 		return (hitl || hitr);
+	}
+
+	void updateAABB(){
+		aabb_raw.reset();
+		for (int i = 0; i < vertCnt; i++){
+			aabb_raw += (*vertices)[i];
+		}
 	}
 };
 

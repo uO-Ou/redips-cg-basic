@@ -25,6 +25,10 @@ typedef unsigned char BYTE;
 
 #define MIX(a,b,mix) ((b*mix)+(a*(1.0f-mix)))
 
+//OPENGL SHADER
+#define _GL_SHADER_VERTEXATTRIB_NORMAL_LOCATION_ 1
+#define _GL_SHADER_VERTEXATTRIB_TEXCOORD_LOCATION_ 2
+
 enum MODEL_TYPE{_sphere_,_triangle_,_panel_};
 
 enum CAMERA_TYPE{_phc_,_glc_,_mpc_};
