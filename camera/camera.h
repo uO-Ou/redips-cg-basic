@@ -2,6 +2,7 @@
 #include "../vec.h"
 #include "../geos/geometry.h"
 #include <fstream>
+using namespace redips;
 class Camera{
 public:
     Camera(){};

@@ -1,5 +1,6 @@
 #pragma once
 #include "../vec.h"
+using namespace redips;
 class BOX{
 public:
     float3 lbb, rtf;
@@ -95,6 +96,18 @@ public:
 		ret[0][0] = 2.0f / box.xdim();      ret[0][3] = -((box.right() + box.left()) / box.xdim());
 		ret[1][1] = 2.0f / box.ydim();       ret[1][3] = -((box.top() + box.bottom()) / box.ydim());
 		ret[2][2] = 2.0f / box.zdim();      ret[2][3] = -((box.front() + box.back()) / box.zdim());
+		ret[3][3] = 1.0f;
+		return ret;
+	}
+	static Mat44f glOrtho(float l,float r,float d,float t,float b,float f){
+		puts("glortho may wrong, debug later");
+		Mat44f ret;
+		float xdim = fabs(r - l);
+		float ydim = fabs(t - d);
+		float zdim = fabs(f - b);
+		ret[0][0] = 2.0f / xdim;      ret[0][3] = -((r + l) / xdim);
+		ret[1][1] = 2.0f / ydim;       ret[1][3] = -((t + d) / ydim);
+		ret[2][2] = 2.0f / zdim;      ret[2][3] = -((f + b) / zdim);
 		ret[3][3] = 1.0f;
 		return ret;
 	}

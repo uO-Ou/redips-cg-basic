@@ -16,7 +16,7 @@ class FGroup{   //face group
 public:
 	FGroup(std::string name, int fsid) :name(name), fsid(fsid){
 		mtlId = 0;  //default material
-		faceCnt = 0;
+		faceCnt = tsid = nsid = 0;;
 		faceType = _unknown_;
 		hasNormals = hasTexture = false;
 	}
@@ -143,7 +143,7 @@ public:
 	Mesh(){
 		mtls.push_back(new Material("default"));
 		groups.push_back(FGroup("default", 0));
-		groups[0].setType(_single_);
+		groups[0].setType(_withnormal_);
 	}
 	~Mesh(){
 		vertices.clear(); normals.clear(); texcoords.clear();
@@ -212,28 +212,36 @@ public:
 		texcoords = &(mesh->texcoords);
 		updateAABB();
 	}
-	Triangles(){
-		useTree = false;
-		type = _triangle_;
-		this->mesh = new Mesh();
-
-		faces_v = &(mesh->faces_v);
-		faces_vt = &(mesh->faces_vt);
-		faces_vn = &(mesh->faces_vn);
-		vertices = &(mesh->vertices);
-		normals = &(mesh->normals);
-		texcoords = &(mesh->texcoords);
-
-		vertCnt = faceCnt = 0;
+	Triangles(){ setup(); }
+	Triangles(const float3 &boxdim){
+		setup();
+		float3 base = boxdim * -0.5f;
+		unsigned int xs[] {3, 3, 1, 1, 4, 4, 5, 4, 3, 1, 0, 0};
+		unsigned int ys[] {7, 6, 7, 5, 2, 0, 4, 6, 2, 3, 5, 4};
+		unsigned int zs[] {6, 2, 3, 7, 6, 2, 7, 7, 0, 0, 1, 5};
+		for (int i = 0; i < 12; i++){
+			addTriangle(base + boxdim*float3::bits(xs[i]), base + boxdim*float3::bits(ys[i]), base + boxdim*float3::bits(zs[i]));
+		}
 	}
 	~Triangles(){};
+
 	void addTriangle(float3 a,float3 b,float3 c){
 		int base = mesh->vertices.size();
+		
 		mesh->vertices.push_back(a);
 		mesh->vertices.push_back(b);
 		mesh->vertices.push_back(c);
+
+		float3 norm = ((b - a) ^ (c - a)).unit();
+		mesh->normals.push_back(norm);
+		mesh->normals.push_back(norm);
+		mesh->normals.push_back(norm);
+
 		mesh->faces_v.push_back(int3(base + 0, base + 1, base + 2));
+		mesh->faces_vn.push_back(int3(base + 0, base + 1, base + 2));
+		
 		mesh->faceGroupId.push_back(0);   //add to default group
+		mesh->groups[0].faceCnt++;
 
 		vertCnt = mesh->vertices.size();
 		faceCnt = mesh->faces_v.size();
@@ -305,7 +313,20 @@ public:
 	const std::vector<float3>* normals;
 	const std::vector<float3>* texcoords;
 private:
-	
+	void setup(){
+		useTree = false;
+		type = _triangle_;
+		this->mesh = new Mesh();
+
+		faces_v = &(mesh->faces_v);
+		faces_vt = &(mesh->faces_vt);
+		faces_vn = &(mesh->faces_vn);
+		vertices = &(mesh->vertices);
+		normals = &(mesh->normals);
+		texcoords = &(mesh->texcoords);
+
+		vertCnt = faceCnt = 0;
+	}
 	std::vector<HOOK> hooks;
 	std::vector<BOX> boxes;
 

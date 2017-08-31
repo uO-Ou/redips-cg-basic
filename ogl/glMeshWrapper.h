@@ -64,15 +64,15 @@ public:
 		for (int i = 0; i < meshCnt; i++){
 			glBindVertexArray(vaos[i]);
 			glBindBuffer(GL_ARRAY_BUFFER, vbos[i]);
-			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+			glEnableVertexAttribArray(0);
 			if (mesh->groups[i].faceType == _withtex_){
-				glEnableVertexAttribArray(_GL_SHADER_VERTEXATTRIB_TEXCOORD_LOCATION_);
+				//glEnableVertexAttribArray(_GL_SHADER_VERTEXATTRIB_TEXCOORD_LOCATION_);
 				glVertexAttribPointer(_GL_SHADER_VERTEXATTRIB_TEXCOORD_LOCATION_, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(sizeof(float)*(mesh->groups[i].faceCnt * 3 * 3)));
 				glDisableVertexArrayAttrib(vaos[i], _GL_SHADER_VERTEXATTRIB_TEXCOORD_LOCATION_);
 			}
 			if (mesh->groups[i].faceType >= _withnormal_){
-				glEnableVertexAttribArray(_GL_SHADER_VERTEXATTRIB_NORMAL_LOCATION_);
+				//glEnableVertexAttribArray(_GL_SHADER_VERTEXATTRIB_NORMAL_LOCATION_);
 				glVertexAttribPointer(_GL_SHADER_VERTEXATTRIB_NORMAL_LOCATION_, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(sizeof(float)*(mesh->groups[i].faceCnt * 3 * (mesh->groups[i].faceType == _withtex_ ? 5 : 3))));
 				glDisableVertexArrayAttrib(vaos[i], _GL_SHADER_VERTEXATTRIB_NORMAL_LOCATION_);
 			}
@@ -89,7 +89,7 @@ public:
 	const Mesh* mesh;
 	const Triangles* model;
 
-	void draw(bool usenormal = false, bool usetexcoord = false) const {
+	void draw(bool usenormal = false, bool usetexcoord = false) {
 		for (int i = 0; i < meshCnt; i++){
 			glBindVertexArray(vaos[i]);
 			if (usenormal&&mesh->groups[i].faceType >= _withnormal_)  glEnableVertexAttribArray(_GL_SHADER_VERTEXATTRIB_NORMAL_LOCATION_);
@@ -98,6 +98,5 @@ public:
 			if (usenormal&&mesh->groups[i].faceType >= _withnormal_) glDisableVertexAttribArray(_GL_SHADER_VERTEXATTRIB_NORMAL_LOCATION_);
 			if (usetexcoord&&mesh->groups[i].faceType == _withtex_) glDisableVertexAttribArray(_GL_SHADER_VERTEXATTRIB_TEXCOORD_LOCATION_);
 		}
-		glBindVertexArray(0);
 	}
 };

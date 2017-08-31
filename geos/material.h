@@ -7,7 +7,7 @@
 #include <iostream>
 #include "../vec.h"
 #include "../FImage.h"
-
+using namespace redips;
 class Material{
 public :
 	Material(std::string name):name(name){

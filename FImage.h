@@ -1,5 +1,6 @@
 #pragma once
 #include "FreeImage/FreeImage.h"
+using namespace redips;
 class FImage{
 public:
 	FImage(const char *file){

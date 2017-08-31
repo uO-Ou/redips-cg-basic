@@ -3,6 +3,7 @@
 #include "material.h"
 #include "geometry.h"
 #include <ctime>
+using namespace redips;
 //notice : transform-operation should update aabb-box;
 class Model{
 public:

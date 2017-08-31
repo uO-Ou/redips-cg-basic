@@ -4,7 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include "geometry.h"
-
+using namespace redips;
 //bug, what if a node has geometry's count larger than MAX_LEAF_SIZE,but after divide,all its geometry allocate to one child;
 
 class KDTree{

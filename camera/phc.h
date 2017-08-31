@@ -16,7 +16,8 @@ public:
 
 			canvaSize.x = fabs(filmSize.x * nearp / focalLength);
 			canvaSize.y = fabs(filmSize.y * nearp / focalLength);
-			
+			updateIntrinsic();
+
 			type = _phc_;
 			reset();
 	};
@@ -29,7 +30,7 @@ public:
 
 			filmSize = canvaSize; //unknown,set to canvaSize
 			focalLength = fabs(nearp); //unknown,set to nearp
-
+			updateIntrinsic();
 			type = _phc_;
 		    reset();
 	};
@@ -40,11 +41,43 @@ public:
 		canvaSize.x = fabs(filmSize.x * nearp / focalLength);
 		canvaSize.y = fabs(filmSize.y * nearp / focalLength);
 		hAov = ANGLE(atan(filmSize.width()*0.5f / focalLength)) * 2;
-		
+		updateIntrinsic();
 		type = _phc_;
 		reset();
 	}
 	~PHC(){};
+	void updateIntrinsic(){
+		//update projection-matrix
+		/*
+		2n/(r-l)		0		(r+l)/(r-l)		0
+		0		2n/(t-b)		(t+b)/(t-b)		0
+		0		0		-(f+n)/(f-n)		-2fn/(f-n)
+		0		0		-1		0
+		*/
+		projection[0][0] = -nearp * 2 / canvaSize.x;
+		projection[1][1] = -nearp * 2 / canvaSize.y;
+		projection[2][2] = (farp + nearp) / (nearp - farp);
+		projection[2][3] = farp*nearp * 2 / (farp - nearp);
+		projection[3][2] = -1;
+	}
+	void updateExtrinsic(){
+		//update camera-to-world-matrix
+		camera2world4.setcol(float4(cameraX, 0.0f), 0);
+		camera2world4.setcol(float4(cameraY, 0.0f), 1);
+		camera2world4.setcol(float4(cameraZ, 0.0f), 2);
+		camera2world4.setcol(float4(cameraO, 1.0f), 3);
+
+		camera2world3.setcol(cameraX, 0);
+		camera2world3.setcol(cameraY, 1);
+		camera2world3.setcol(cameraZ, 2);
+
+		//update world-to-camera-matrix
+		world2camera.setrow(float4(cameraX, 0.0f), 0);
+		world2camera.setrow(float4(cameraY, 0.0f), 1);
+		world2camera.setrow(float4(cameraZ, 0.0f), 2);
+		world2camera.setrow(float4(0.0f, 0.0f, 0.0f, 1.0f), 3);
+		world2camera = world2camera * Mat44f::translation(cameraO*-1);
+	}
 	const float3& pos() const{ return cameraO; }
 	const Mat33f& c2w3() const { return camera2world3; }
 	const Mat44f& c2w4() const { return camera2world4; };
@@ -104,7 +137,7 @@ public:
 		fin >> cameraY.x >> cameraY.y >> cameraY.z;
 		fin >> cameraZ.x >> cameraZ.y >> cameraZ.z;
 		fin >> cameraO.x >> cameraO.y >> cameraO.z;
-		update();
+		updateExtrinsic();
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const PHC& phc){
@@ -140,7 +173,9 @@ public:
 
 	//zoom-in when ratio>0, other wise zoom out
 	void zoom(float ratio){ 
-		if (1.0f + ratio>0)	setFocalLength(focalLength*(1 + ratio)); 
+		if (1.0f + ratio > 0)	{
+			setFocalLength(focalLength*(1 + ratio));
+		}
 	}
 	//notice: focus-pos shouldn't coinline with up! this may not be left-hand base
 	void lookAt(const float3& pos, const float3& focus, const float3& up){
@@ -148,7 +183,7 @@ public:
 		cameraX = (up ^ cameraZ).unit();
 		cameraY = (cameraZ ^ cameraX).unit();
 		cameraO = pos;
-		update();
+		updateExtrinsic();
 	}
 	//all in rad
 	void pan(float angle){
@@ -156,29 +191,29 @@ public:
 		cameraX = rotate*cameraX;
 		cameraY = rotate*cameraY;
 		cameraZ = rotate*cameraZ;
-		update();
+		updateExtrinsic();
 	}
 	void tilt(float angle){
 		Mat33f rotate = Mat33f::tilt(angle);
 		cameraX = rotate*cameraX;
 		cameraY = rotate*cameraY;
 		cameraZ = rotate*cameraZ;
-		update();
+		updateExtrinsic();
 	}
 	void roll(float angle){
 		Mat33f rotate = Mat33f::roll(angle);
 		cameraX = rotate*cameraX ;
 		cameraY = rotate*cameraY ;
 		cameraZ = rotate*cameraZ ;
-		update();
+		updateExtrinsic();
 	}
 	void translate(const float3& offset){
 		cameraO += offset;
-		update();
+		updateExtrinsic();
 	}
 	void moveTo(const float3& pos){
 		cameraO = pos;
-		update();
+		updateExtrinsic();
 	}
 
 public:
@@ -209,39 +244,7 @@ private:
 		cameraY = float3(0, 1, 0);
 		cameraZ = float3(0, 0, 1);
 		cameraO = float3(0, 0, 0);
-		update();
-	}
-
-	void update(){
-		//update camera-to-world-matrix
-		camera2world4.setcol(float4(cameraX, 0.0f), 0);
-		camera2world4.setcol(float4(cameraY, 0.0f), 1);
-		camera2world4.setcol(float4(cameraZ, 0.0f), 2);
-		camera2world4.setcol(float4(cameraO, 1.0f), 3);
-
-		camera2world3.setcol(cameraX, 0);
-		camera2world3.setcol(cameraY, 1);
-		camera2world3.setcol(cameraZ, 2);
-
-		//update world-to-camera-matrix
-		world2camera.setrow(float4(cameraX, 0.0f), 0);
-		world2camera.setrow(float4(cameraY, 0.0f), 1);
-		world2camera.setrow(float4(cameraZ, 0.0f), 2);
-		world2camera.setrow(float4(0.0f, 0.0f, 0.0f, 1.0f), 3);
-		world2camera = world2camera * Mat44f::translation(cameraO*-1);
-
-		//update projection-matrix
-		/*
-		2n/(r-l)		0		(r+l)/(r-l)		0
-		0		2n/(t-b)		(t+b)/(t-b)		0
-		0		0		-(f+n)/(f-n)		-2fn/(f-n)
-		0		0		-1		0
-		*/
-		projection[0][0] = -nearp * 2 / canvaSize.x;
-		projection[1][1] = -nearp * 2 / canvaSize.y;
-		projection[2][2] = (farp + nearp) / (nearp-farp);
-		projection[2][3] = farp*nearp * 2 / (farp-nearp);
-		projection[3][2] = -1;
+		updateExtrinsic();
 	}
 
 	void setFocalLength(float len){
@@ -249,12 +252,14 @@ private:
 		hAov = ANGLE(atan(filmSize.x*0.5f/focalLength))*2;
 		canvaSize.x = fabs(filmSize.x * nearp / focalLength);
 		canvaSize.y = fabs(filmSize.y * nearp / focalLength);
+		updateIntrinsic();
 	}
 	void setHAov(float angle/*rad*/){
 		hAov = ANGLE(angle);
 		focalLength = filmSize.width()*0.5f / tan(angle*0.5f);
 		canvaSize.x = fabs(filmSize.x * nearp / focalLength);
 		canvaSize.y = fabs(filmSize.y * nearp / focalLength);
+		updateIntrinsic();
 	}
 };
 
