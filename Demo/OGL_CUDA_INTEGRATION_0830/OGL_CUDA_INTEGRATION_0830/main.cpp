@@ -1,7 +1,7 @@
 #include <scene.h>
 #include <ogl/glMeshWrapper.h>
 #include <ogl/shaderManager.h>
-#include <geos/voxelizer.h>
+#include <ogl/voxelizer.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -24,7 +24,7 @@ void movement();
 MPC *mpc;
 //scene setup
 Scene scene;
-Triangles *model = new Triangles(GARDEN_PATH);
+Triangles *model = new Triangles(SPONZA_PATH);
 glMeshWrapper *glModelWrapper;
 ShaderManager *shaderManager;
 PHC phc(60.0f, 768.0f / 576.0f, 1.0f, 1000.0f, "mainphc");
@@ -39,7 +39,7 @@ void myInit(){
 	scene.updateSceneBox();
 	phc.lookAt(scene.sceneBox.heart() + float3(0, 20, 50), scene.sceneBox.heart(), float3(0, 1, 0));
 	lightPos = scene.sceneBox.heart() + float3(0,20,0);
-	scene.addLight(Light(lightPos, float3(0.0f, 0.0f, 1.0f)));
+	scene.addLight(Light(lightPos, float3(0.8f, 0.8f, 1.0f)));
 
 	/*for opengl*/
 	//gl wrapper , copy model data to gpu
@@ -53,8 +53,8 @@ void myInit(){
 	//cv::imshow("projection",scene.image);
 
 	//other
-	voxellizer.run(glModelWrapper, shaderManager->shader("voxelizer"), 8);
-
+	voxellizer.onedVoxelization(glModelWrapper, shaderManager->shader("voxelizer"), 9);
+	voxellizer.multidVoxelization(90,90,8);
 }
 int main(){
 	// Init GLFW
@@ -110,7 +110,7 @@ int main(){
 			glUniformMatrix4fv(glGetUniformLocation(plainShader->Program, "view"), 1, GL_FALSE, phc.glView().ptr());
 			glUniformMatrix4fv(glGetUniformLocation(plainShader->Program, "model"), 1, GL_FALSE, Mat44f::eye().transpose().ptr());
 
-			glUniform3f(glGetUniformLocation(plainShader->Program, "lightColor"), 0.2f, 0.8f, 0.2f);
+			glUniform3f(glGetUniformLocation(plainShader->Program, "lightColor"), 0.8f, 0.8f, 1.0f);
 			glUniform3f(glGetUniformLocation(plainShader->Program, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 			glUniform3f(glGetUniformLocation(plainShader->Program, "cameraPos"), phc.pos().x, phc.pos().y, phc.pos().z);
 			glModelWrapper->draw(true, false);
@@ -121,7 +121,7 @@ int main(){
 			glUniformMatrix4fv(glGetUniformLocation(voxelShader->Program, "view"), 1, GL_FALSE, phc.glView().ptr());
 			glUniformMatrix4fv(glGetUniformLocation(voxelShader->Program, "model"), 1, GL_FALSE, Mat44f::eye().transpose().ptr());
 
-			glUniform3f(glGetUniformLocation(voxelShader->Program, "lightColor"), 0.2f, 0.8f, 0.2f);
+			glUniform3f(glGetUniformLocation(voxelShader->Program, "lightColor"), 0.8f, 0.8f, 1.0f);
 			glUniform3f(glGetUniformLocation(voxelShader->Program, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 			glUniform3f(glGetUniformLocation(voxelShader->Program, "cameraPos"), phc.pos().x, phc.pos().y, phc.pos().z);
 			
@@ -138,7 +138,6 @@ int main(){
 			glModelWrapper->draw(true,false);
 		}
 		
-
 		glfwSwapBuffers(window);
 	}
 	glfwTerminate();

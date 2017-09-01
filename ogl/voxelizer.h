@@ -1,12 +1,13 @@
 #pragma once
-#include "triangles.h"
-#include "particles.h"
-#include "../ogl/shader.h"
-#include "../ogl/glTexture.h"
-#include "../ogl/glMeshWrapper.h"
+#include "../geos/triangles.h"
+#include "shader.h"
+#include "glTexture.h"
+#include "glMeshWrapper.h"
+
+#define VOXEL_PROJECTION_VIEWPORT_SIZE 1024
 
 extern "C" GLuint packVoxel(GLuint invbo, int res2, unsigned int &TOTAL_VOXEL_CNT, redips::float3 boxcenter, redips::float3 boxdim);
-
+extern "C" void mdVoxelization(GLuint dotsvbo, int dotscnt, redips::float3 dotscenter, int rotx, int roty,const float* mats, unsigned int presition);
 class Voxelizer{
 public:
 	Voxelizer(){};
@@ -16,12 +17,13 @@ public:
 	unsigned int res2;
 	unsigned int TOTAL_VOXEL_CNT = 0;
 public:
-	void run(glMeshWrapper* model,Shader* shader,unsigned int res2){
+	void onedVoxelization(glMeshWrapper* model,Shader* shader,unsigned int res2){
 		//glTexture counter;
 		//counter.create3d(int3(resolution,resolution,resolution/32),GL_R32UI,GL_RED_INTEGER,GL_UNSIGNED_INT,nullptr);
 		//use ssbo instead of texture
-		this->res2 = res2;
-		assert(res2 < 9);
+		assert(res2 < 11);
+		this->res2 = res2 = MIN(res2,10);
+		
 		curModel = model;
 
 		int bufferBytes = 1u << (res2 * 3 - 3);
@@ -33,30 +35,36 @@ public:
 		shader->Use();
 		GLuint blockIndex = glGetProgramResourceIndex(shader->Program,GL_SHADER_STORAGE_BLOCK,"counter");
 		glShaderStorageBlockBinding(shader->Program,blockIndex,0);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER,0,ssbo);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
 		
-		//render 3 times
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DEPTH_TEST);
 		BOX mbox = model->model->aabb();
+		//render 3 times
+		{
+			//GLint orivp[4];
+			//glGetIntegerv(GL_VIEWPORT, orivp);
+			//glViewport(0, 0, VOXEL_PROJECTION_VIEWPORT_SIZE, VOXEL_PROJECTION_VIEWPORT_SIZE);
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
+			
+			glUniform1ui(glGetUniformLocation(shader->Program, "res2"), res2);
+			glUniformMatrix4fv(glGetUniformLocation(shader->Program, "model"), 1, GL_FALSE, (model->model->Transform()).transpose().ptr());
 
-		glUniform1ui(glGetUniformLocation(shader->Program, "res2"), res2);
-		glUniformMatrix4fv(glGetUniformLocation(shader->Program, "model"), 1, GL_FALSE, (model->model->Transform()).transpose().ptr());
-		
-		glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, (GeoUtil::glOrtho(mbox)).transpose().ptr());
-		glUniformMatrix3fv(glGetUniformLocation(shader->Program, "swizzler"), 1, GL_FALSE, Mat33f::xyz().transpose().ptr());
-		model->draw(false,false);
-		
-		glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, (GeoUtil::glOrtho(mbox.back(),mbox.front(),mbox.left(),mbox.right(),mbox.bottom(),mbox.top())).transpose().ptr());
-		glUniformMatrix3fv(glGetUniformLocation(shader->Program, "swizzler"), 1, GL_FALSE, Mat33f::zxy().transpose().ptr());
-		model->draw(false, false);
+			glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, (GeoUtil::glOrtho(mbox)).transpose().ptr());
+			glUniformMatrix3fv(glGetUniformLocation(shader->Program, "swizzler"), 1, GL_FALSE, Mat33f::xyz().transpose().ptr());
+			model->draw(false, false);
 
-		glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, (GeoUtil::glOrtho(mbox.bottom(),mbox.top(),mbox.back(),mbox.front(),mbox.left(),mbox.right())).transpose().ptr());
-		glUniformMatrix3fv(glGetUniformLocation(shader->Program, "swizzler"), 1, GL_FALSE, Mat33f::yzx().transpose().ptr());
-		model->draw(false, false);
+			glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, (GeoUtil::glOrtho(mbox.back(), mbox.front(), mbox.left(), mbox.right(), mbox.bottom(), mbox.top())).transpose().ptr());
+			glUniformMatrix3fv(glGetUniformLocation(shader->Program, "swizzler"), 1, GL_FALSE, Mat33f::zxy().transpose().ptr());
+			model->draw(false, false);
 
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_CULL_FACE);
+			glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, (GeoUtil::glOrtho(mbox.bottom(), mbox.top(), mbox.back(), mbox.front(), mbox.left(), mbox.right())).transpose().ptr());
+			glUniformMatrix3fv(glGetUniformLocation(shader->Program, "swizzler"), 1, GL_FALSE, Mat33f::yzx().transpose().ptr());
+			model->draw(false, false);
+
+			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_CULL_FACE);
+			//glViewport(orivp[0], orivp[1], orivp[2], orivp[3]);
+		}
 		
 		voxelvbo = packVoxel(ssbo, res2, TOTAL_VOXEL_CNT, mbox.heart(), mbox.dim());
 		isVoxelBoxSetup = false;
@@ -80,6 +88,21 @@ public:
 		}
 		glBindVertexArray(glVoxelWrapper->vaos[0]);
 		glDrawArraysInstanced(GL_TRIANGLES, 0, 36, TOTAL_VOXEL_CNT);
+	}
+
+	void multidVoxelization(int rotx, int roty, int precision){
+		   assert(voxelvbo);
+		   assert(precision<=res2);
+		   BOX box = curModel->model->aabb(),tbox;
+		   Mat44f *mats = new Mat44f[roty*rotx];
+		   for (int x = 0; x < rotx; x++) for (int y = 0; y < roty; y++){
+			   Mat33f rotate = Mat33f::tilt(RAD(x*180.0f / rotx))*Mat33f::pan(RAD(y*180.0f/roty));
+			   for (unsigned int i = 0; i < 8; i++){ tbox += (rotate * (box.lbb + (box.dim()*float3::bits(i)))); }
+			   float3 dim = tbox.dim();
+			   mats[y*rotx + x] = GeoUtil::glOrtho(dim.x*-0.5f,dim.x*0.5f,dim.y*-0.5f,dim.y*0.5f,dim.z*-0.5f,dim.z*0.5f)*Mat44f(rotate);
+			   tbox.reset();
+		   }
+		   mdVoxelization(voxelvbo, TOTAL_VOXEL_CNT, box.heart(), rotx, roty, mats[0].ptr(), precision);
 	}
 private:
 	Triangles* voxel = nullptr;

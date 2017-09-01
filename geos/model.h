@@ -16,7 +16,6 @@ public:
 		  BOX ret;
 		  for (int i = 0; i < 8; i++){  
 			  ret += (transform*float4(aabb_raw.lbb + float3::bits(i)*aabb_raw.dim(), 1.0f)).vec3();	
-			  float3 tmp = aabb_raw.lbb + float3::bits(i)*aabb_raw.dim();
 		  }
 		  return ret;
 	  }

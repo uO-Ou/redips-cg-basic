@@ -90,8 +90,8 @@ public:
 		if (((a - d) ^ (p - d)) < 0.0f) return false;
 		return true;
 	}
+	//glortho may wrong, debug later
 	static Mat44f glOrtho(const BOX& box){
-		puts("glortho may wrong, debug later");
 		Mat44f ret;
 		ret[0][0] = 2.0f / box.xdim();      ret[0][3] = -((box.right() + box.left()) / box.xdim());
 		ret[1][1] = 2.0f / box.ydim();       ret[1][3] = -((box.top() + box.bottom()) / box.ydim());
@@ -99,8 +99,8 @@ public:
 		ret[3][3] = 1.0f;
 		return ret;
 	}
+	//glortho may wrong, debug later
 	static Mat44f glOrtho(float l,float r,float d,float t,float b,float f){
-		puts("glortho may wrong, debug later");
 		Mat44f ret;
 		float xdim = fabs(r - l);
 		float ydim = fabs(t - d);

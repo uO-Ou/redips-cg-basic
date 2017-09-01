@@ -22,7 +22,16 @@
 #include <thrust/device_vector.h>
 #include <vec.h>
 
-//**************************kernels
+#define _MAX_GMEM_4_VOXELRESULT_IN_GB_ 2.0
+#define _DIRECTION_CNT_PER_BLOCK_ 16u
+#define _THREAD_NUM_PER_BLOCK_ 1024
+
+/******************************************************************/
+/**********                          kernels                               ***********/
+/******************************************************************/
+__device__ void multy(){
+
+}
 __global__ void calcnt(unsigned int *input,unsigned int *output,int workload){
 	const unsigned int gap = gridDim.x * blockDim.x;
 	unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -60,7 +69,28 @@ __global__ void gendots(unsigned int *input, unsigned int *presum, float3* dots,
 		}
 	}
 }
+__global__ void transform(float3* dots, unsigned dotcnt, redips::float3 center, float* mats,unsigned int sid,unsigned int eid,unsigned int presicion,unsigned int * result){
+	const unsigned int gap = blockDim.x;
+	unsigned int tid = threadIdx.x;
+	unsigned int matSId = blockIdx.x * _DIRECTION_CNT_PER_BLOCK_;
+	unsigned int matEId = matSId + _DIRECTION_CNT_PER_BLOCK_ - 1; if (matEId + sid > eid) matEId = eid - sid;
 
+	__shared__ float mats_sm[_DIRECTION_CNT_PER_BLOCK_ << 4];
+	__shared__ float dots_sm[_THREAD_NUM_PER_BLOCK_*3];
+	{
+		float* matsptr = mats + ((sid+matSId) << 4);
+		if (tid < ((matEId - matSId + 1) << 4)){
+			mats_sm[tid] = matsptr[tid];
+		}
+		__syncthreads();
+	}
+	
+	for (; tid < dotcnt; tid += gap){
+		for (int mid = matSId; mid <= matEId; mid++){  // mid+sid 
+
+		}
+	}
+}
 
 extern "C"
 bool cudaInit(){
@@ -93,7 +123,7 @@ GLuint packVoxel(GLuint invbo, int res2, unsigned int &TOTAL_VOXEL_CNT,redips::f
 	thrust::device_ptr<unsigned int > presumPtr(presum_dev);
 	thrust::exclusive_scan(presumPtr, presumPtr + workload, presumPtr);
 	cudaDeviceSynchronize();
-	cudaMemcpy(&TOTAL_VOXEL_CNT,presum_dev+workload-1,sizeof(unsigned int),cudaMemcpyDeviceToHost);
+	checkCudaErrors(cudaMemcpy(&TOTAL_VOXEL_CNT, presum_dev + workload - 1, sizeof(unsigned int), cudaMemcpyDeviceToHost));
 	printf("[cuda] : total voxel cnt is %d\n",TOTAL_VOXEL_CNT);
 	//step3: new buffer,generate dots 
 	glGenBuffers(1,&outvbo);
@@ -113,3 +143,35 @@ GLuint packVoxel(GLuint invbo, int res2, unsigned int &TOTAL_VOXEL_CNT,redips::f
 	return outvbo;
 }
 
+extern "C"
+void mdVoxelization(GLuint dotsvbo, int dotscnt, redips::float3 dotscenter, int rotx, int roty,const float* mats, unsigned int presicion){
+	   float MEM_PER_DIRECTION_MB = (1u << (presicion * 3 - 3))*1.0f / (1u << 20);
+	   size_t DIRECTION_CNT_PER_PROCESS = _MAX_GMEM_4_VOXELRESULT_IN_GB_*1024.0f / MEM_PER_DIRECTION_MB;
+	   printf("[cuda] : MEM_PER_DIRECTION_MB is %.4f, DIRECTION_CNT_PER_PROCESS %lld using %.4fg memory\n", MEM_PER_DIRECTION_MB, DIRECTION_CNT_PER_PROCESS, DIRECTION_CNT_PER_PROCESS*MEM_PER_DIRECTION_MB/1024);
+	   
+	   float* dots_dev; size_t num_bytes;
+	   struct cudaGraphicsResource *cuda_vbo_binder;
+	   checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_binder, dotsvbo, cudaGraphicsMapFlagsReadOnly));
+	   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_vbo_binder, 0));
+	   checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&dots_dev, &num_bytes, cuda_vbo_binder));
+	   printf("[cuda] : mapped %d bytes dots\n", num_bytes);
+	   
+	   float* mats_dev;
+	   checkCudaErrors(cudaMalloc((void**)&mats_dev, sizeof(float)* 16 * rotx*roty));
+	   checkCudaErrors(cudaMemcpy(mats_dev, mats, sizeof(float)* 16 * rotx*roty, cudaMemcpyHostToDevice));
+
+	   unsigned int* result_dev;
+	   checkCudaErrors(cudaMalloc((void**)&result_dev, DIRECTION_CNT_PER_PROCESS*(1u << (presicion * 3 - 3))));
+
+	   //launch kernels
+	   for (int sid = 0; ;sid += DIRECTION_CNT_PER_PROCESS){
+		   int tid = MIN(sid + DIRECTION_CNT_PER_PROCESS - 1, rotx*roty - 1);
+		   int blockCnt = ((tid - sid + 1) - 1) / _DIRECTION_CNT_PER_BLOCK_ + 1;
+
+		   if (tid >= rotx*roty - 1) break;
+	   }
+
+	   checkCudaErrors(cudaFree(result_dev));
+	   checkCudaErrors(cudaFree(mats_dev));
+	   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_vbo_binder, 0));
+}

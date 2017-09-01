@@ -202,6 +202,11 @@ namespace redips{
 	public:
 		Mat44() { memset(m, 0, sizeof(T)* 16); };
 		Mat44(T* data){ for (int i = 0; i < 16; i++) m[i / 4][i % 4] = data[i]; };
+		Mat44(Mat33<T> mat3){
+			memset(m, 0, sizeof(T)* 16);
+			for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) m[i][j] = mat3[i][j];
+			m[3][3] = T(1);
+		}
 
 		T* operator[] (std::size_t idx){ return m[idx]; };
 		const T* operator[] (std::size_t idx) const { return m[idx]; };

@@ -337,7 +337,6 @@ private:
 		}
 		if (mtree.gcnts[boxId] <= mtree.MAX_LEAF_SIZE) {
 			boxCnt++;
-			float dist;
 			bool hitted = false;
 			for (int i = mtree.gspos[boxId]; i < mtree.gspos[boxId] + mtree.gcnts[boxId]; i++){
 				int3 face = (*faces_v)[hooks[i].first];
