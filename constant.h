@@ -1,4 +1,8 @@
 #pragma once
+namespace redips{
+	enum MODEL_TYPE{ _sphere_, _triangle_, _panel_ };
+	enum CAMERA_TYPE{ _phc_, _glc_, _mpc_ };
+};
 #ifndef PI
 #define PI 3.1415926f
 #endif
@@ -17,14 +21,11 @@
 #define MIN(a,b) (a)<=(b)?(a):(b)
 #endif
 
-typedef unsigned char BYTE;
-
 #ifndef CLAMP
 #define CLAMP(a,b,c) ((a)<(b)?(b):((a)>(c)?(c):(a)))
 #endif
 
 #define MIX(a,b,mix) ((b*mix)+(a*(1.0f-mix)))
 
-enum MODEL_TYPE{_sphere_,_triangle_,_panel_};
+typedef unsigned char BYTE;
 
-enum CAMERA_TYPE{_phc_,_glc_,_mpc_};

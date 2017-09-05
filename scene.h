@@ -4,7 +4,7 @@
 #include "geos/particles.h"
 #include "geos/triangles.h"
 #include <opencv2/opencv.hpp>
-
+using namespace redips;
 class Scene {
 public:
 	Scene(){
