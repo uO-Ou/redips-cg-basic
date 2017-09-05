@@ -2,11 +2,11 @@
 *   obj-mesh loader
 *   notice:
 *         1. each mesh has a default-material. call .setDefaultMaterial(your-material) to change default-material.
+*            each mtl make a new group
 *         2. can only process : v、vt、vn、f、mtllib、usemtl、g
 *             several limits:
 *             2.1. vt is 3-dimention
 *             2.2. f can only has 3 format : withtex(a/b/c) withnormal(a//c) single(a)
-*             2.3 a group can only has one material
 */
 #pragma once
 #include "model.h"
@@ -14,9 +14,8 @@ enum GROUP_FACE_TYPE{ _unknown_, _single_, _withnormal_, _withtex_, _other_ };
 
 class FGroup{   //face group
 public:
-	FGroup(std::string name, int fsid) :name(name), fsid(fsid){
-		mtlId = 0;  //default material
-		faceCnt = tsid = nsid = 0;;
+	FGroup(std::string name, int fsid,int mtlId) : name(name), fsid(fsid),mtlId(mtlId){
+		faceCnt = tsid = nsid = 0;
 		faceType = _unknown_;
 		hasNormals = hasTexture = false;
 	}
@@ -39,8 +38,8 @@ public:
 class Mesh{
 public:
 	Mesh(const char* file){
-		mtls.push_back(new Material("default"));
-		mtlManager = new MaterialManager(&mtls);
+		groups.push_back(FGroup("default",0,0));
+		int curGid = 0;
 		std::string basepath = "";
 		{
 			int tid; if ((tid = std::string(file).find_last_of('/')) != -1){
@@ -58,12 +57,11 @@ public:
 		puts("[mesh loader] : Loading...");  clock_t start, finish;  start = clock();
 
 		std::string curMtllib = "";
-		int curGid = -1;
 		while (fin >> buff){
 			if (buff == "mtllib"){
 				fin >> curMtllib;
 				if (curMtllib[1] != ':'){ curMtllib = basepath + curMtllib; }
-				mtlManager->loadMtllib((curMtllib).c_str());
+				mtllib.load((curMtllib).c_str());
 			}
 			else if (buff == "v"){
 				fin >> floatx >> floaty >> floatz;
@@ -77,27 +75,16 @@ public:
 				fin >> floatx >> floaty >> floatz;
 				texcoords.push_back(float3(floatx, floaty, floatz));
 			}
-			else if (buff == "usemtl"){   //may wrong
+			else if (buff == "usemtl"){
 				fin >> buff;
-				if (curGid == -1) {
-					groups.push_back(FGroup("default", 0));
-					curGid = 0;
-				}
-				groups[curGid].mtlId = mtlManager->getMtlId(curMtllib, buff);
-			}
-			else if (buff == "g"){
-				if (curGid >= 0){ groups[curGid].faceCnt = faces_v.size() - groups[curGid].fsid; }
-				fin >> buff;
-				groups.push_back(FGroup(buff, faces_v.size()));
+				//put an end to last group
+				groups[curGid].faceCnt = faces_v.size() - groups[curGid].fsid;
+				//find material-id,new group
+				groups.push_back(FGroup(buff, faces_v.size(), mtllib.getMtlId(curMtllib, buff)));
 				curGid++;
 			}
 			else if (buff == "f"){
 				fin >> str1 >> str2 >> str3;
-				//no g-label appeared, add to default group
-				if (curGid == -1) {
-					groups.push_back(FGroup("default", 0));
-					curGid = 0;
-				}
 				faceGroupId.push_back(curGid);
 
 				if (groups[curGid].faceType == _unknown_){
@@ -141,21 +128,16 @@ public:
 		//std::cout << (*this);
 	}
 	Mesh(){
-		mtls.push_back(new Material("default"));
-		groups.push_back(FGroup("default", 0));
+		groups.push_back(FGroup("default", 0,0));
 		groups[0].setType(_withnormal_);
 	}
 	~Mesh(){
 		vertices.clear(); normals.clear(); texcoords.clear();
 		faces_v.clear(); faces_vn.clear(); faces_vt.clear(); faceGroupId.clear();
 		groups.clear();
-		mtls.clear();
-	};
-	void setDefaultMaterial(Material* mtlDefault){
-		this->mtls[0] = mtlDefault;
 	};
 	const Material* getMaterial(int faceId) const{
-		return this->mtls[groups[faceGroupId[faceId]].mtlId];
+		return mtllib[(groups[faceGroupId[faceId]].mtlId)];
 	}
 	friend std::ostream& operator<<(std::ostream &os, const Mesh& mesh){
 		os << mesh.faces_v.size() << " faces, " << mesh.vertices.size() << " vertices, " << mesh.normals.size() << " normals, " << mesh.texcoords.size() << " texcoords, {" << std::endl;
@@ -164,7 +146,7 @@ public:
 			os << "\t\t " << mesh.groups[i].faceCnt << " faces, "
 				<< (mesh.groups[i].hasTexture ? " has texture, " : "")
 				<< (mesh.groups[i].hasNormals ? " has normals, " : "")
-				<< "material name : " << mesh.mtls[mesh.groups[i].mtlId]->name
+				<< "material name : " << mesh.mtllib[mesh.groups[i].mtlId]->name
 				<< std::endl;
 			os << "\t}" << std::endl;
 		}
@@ -183,17 +165,14 @@ public:
 	std::vector<int> faceGroupId;
 	//groups
 	std::vector<FGroup> groups;
+	//matlib
+	MtlLib mtllib;
 private:
-	//materials
-	std::vector<Material*> mtls;
-	//mtl manager
-	MaterialManager *mtlManager;
 	//buffer
 	float floatx, floaty, floatz;
 	int v[3], vn[3], vt[3];
 	std::string buff, str1, str2, str3;
 };
-
 
 class Triangles : public Model {
 public:

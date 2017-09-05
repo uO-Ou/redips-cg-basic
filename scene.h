@@ -190,7 +190,7 @@ public:
 				}
 				if (litted){
 					float factor = (shadowRay.dir.dot(records.normal));
-					surfaceColor += lights[i].color * (MAX(0.0f, factor)) * mtl->diffuse * (1.0/records.distance) * 20;
+					surfaceColor += lights[i].color * (MAX(0.0f, factor)) * mtl->diffuse * (10.0/records.distance);
 				}
 			}
 		}

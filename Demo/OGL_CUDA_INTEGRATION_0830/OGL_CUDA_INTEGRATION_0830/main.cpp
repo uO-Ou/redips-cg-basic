@@ -1,9 +1,10 @@
 #include <scene.h>
-#include <ogl/glMeshWrapper.h>
 #include <ogl/shaderManager.h>
 #include <ogl/voxelizer.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <ogl/demoEffects/voxelMesh.h>
+#include <ogl/demoEffects/texLightMesh.h>
 
 #define WIN_WIDTH 768
 #define WIN_HEIGHT 576
@@ -23,17 +24,19 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void movement();
 MPC *mpc;
 //scene setup
-Scene scene;
 Triangles *model = new Triangles(SPONZA_PATH);
-glMeshWrapper *glModelWrapper;
+Voxelizer voxellizer;
+VoxelMesh *voxelMesh;
+TexLightMesh *texMesh;
+LightMesh* litMesh;
 ShaderManager *shaderManager;
+Scene scene;
 PHC phc(60.0f, 768.0f / 576.0f, 1.0f, 1000.0f, "mainphc");
 float3 lightPos;
-Voxelizer voxellizer;
 float yangle = 0;
 float xangle = 0;
 //flags
-uchar renderMode = 1;
+uchar renderMode = 0;
 void myInit(){
 	scene.addObject(model);
 	scene.updateSceneBox();
@@ -43,9 +46,12 @@ void myInit(){
 
 	/*for opengl*/
 	//gl wrapper , copy model data to gpu
-	glModelWrapper = new glMeshWrapper( model );
-	//create all shaders
+	voxelMesh = new VoxelMesh(model);
+	texMesh = new TexLightMesh(*voxelMesh);
+	litMesh = new LightMesh(*voxelMesh);
+
 	shaderManager = new ShaderManager("./shaders");
+
 	/*for ray tracing*/
 	//kdtree
 	model->buildTree();
@@ -53,8 +59,8 @@ void myInit(){
 	//cv::imshow("projection",scene.image);
 
 	//other
-	voxellizer.onedVoxelization(glModelWrapper, shaderManager->shader("voxelizer"), 9);
-	voxellizer.multidVoxelization(90,90,8);
+	voxellizer.onedVoxelization(voxelMesh, (*shaderManager)["voxelizer"], 9);
+	//voxellizer.multidVoxelization(90,90,8,"./result/sponza");
 }
 int main(){
 	// Init GLFW
@@ -91,9 +97,11 @@ int main(){
 
 	myInit();
 	
-	Shader * plainShader = shaderManager->shader("plain");
-	Shader * voxelShader = shaderManager->shader("rendervoxels");
-	Shader * othorgonalShader = shaderManager->shader("orthogonal");
+	Shader * texLightShader = (*shaderManager)["texLight"];
+	Shader * voxelShader = (*shaderManager)["rendervoxels"];
+	Shader * othorgonalShader = (*shaderManager)["orthogonal"];
+	Shader * lightShader = (*shaderManager)["light"];
+
 	while (!glfwWindowShouldClose(window)){
 		GLfloat currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
@@ -105,15 +113,15 @@ int main(){
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		if (renderMode == 0){
-			plainShader->Use();
-			glUniformMatrix4fv(glGetUniformLocation(plainShader->Program, "projection"), 1, GL_FALSE, phc.glProjection().ptr());
-			glUniformMatrix4fv(glGetUniformLocation(plainShader->Program, "view"), 1, GL_FALSE, phc.glView().ptr());
-			glUniformMatrix4fv(glGetUniformLocation(plainShader->Program, "model"), 1, GL_FALSE, Mat44f::eye().transpose().ptr());
+			texLightShader->Use();
+			glUniformMatrix4fv(glGetUniformLocation(texLightShader->Program, "projection"), 1, GL_FALSE, phc.glProjection().ptr());
+			glUniformMatrix4fv(glGetUniformLocation(texLightShader->Program, "view"), 1, GL_FALSE, phc.glView().ptr());
+			glUniformMatrix4fv(glGetUniformLocation(texLightShader->Program, "model"), 1, GL_FALSE, Mat44f::eye().transpose().ptr());
 
-			glUniform3f(glGetUniformLocation(plainShader->Program, "lightColor"), 0.8f, 0.8f, 1.0f);
-			glUniform3f(glGetUniformLocation(plainShader->Program, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-			glUniform3f(glGetUniformLocation(plainShader->Program, "cameraPos"), phc.pos().x, phc.pos().y, phc.pos().z);
-			glModelWrapper->draw(true, false);
+			glUniform3f(glGetUniformLocation(texLightShader->Program, "lightColor"), 0.6f, 0.6f, 0.8f);
+			glUniform3f(glGetUniformLocation(texLightShader->Program, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+			glUniform3f(glGetUniformLocation(texLightShader->Program, "cameraPos"), phc.pos().x, phc.pos().y, phc.pos().z);
+			texMesh->draw(*texLightShader);
 		}
 		else if (renderMode == 1){
 			voxelShader->Use();
@@ -121,21 +129,21 @@ int main(){
 			glUniformMatrix4fv(glGetUniformLocation(voxelShader->Program, "view"), 1, GL_FALSE, phc.glView().ptr());
 			glUniformMatrix4fv(glGetUniformLocation(voxelShader->Program, "model"), 1, GL_FALSE, Mat44f::eye().transpose().ptr());
 
-			glUniform3f(glGetUniformLocation(voxelShader->Program, "lightColor"), 0.8f, 0.8f, 1.0f);
+			glUniform3f(glGetUniformLocation(voxelShader->Program, "lightColor"), 0.6f, 0.6f, 0.8f);
 			glUniform3f(glGetUniformLocation(voxelShader->Program, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 			glUniform3f(glGetUniformLocation(voxelShader->Program, "cameraPos"), phc.pos().x, phc.pos().y, phc.pos().z);
-			
 			voxellizer.renderVoxels();
 		}
 		else if (renderMode==2){
-			othorgonalShader->Use();
-			glUniform3f(glGetUniformLocation(othorgonalShader->Program, "lightColor"), 0.2f, 0.8f, 0.2f);
-			glUniform3f(glGetUniformLocation(othorgonalShader->Program, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-			
-			glUniformMatrix4fv(glGetUniformLocation(othorgonalShader->Program, "projection"), 1, GL_FALSE, GeoUtil::glOrtho(model->aabb()).transpose().ptr());
-			glUniformMatrix4fv(glGetUniformLocation(othorgonalShader->Program, "model"), 1, GL_FALSE, model->Transform().transpose().ptr());
+			lightShader->Use();
+			glUniformMatrix4fv(glGetUniformLocation(lightShader->Program, "projection"), 1, GL_FALSE, phc.glProjection().ptr());
+			glUniformMatrix4fv(glGetUniformLocation(lightShader->Program, "view"), 1, GL_FALSE, phc.glView().ptr());
+			glUniformMatrix4fv(glGetUniformLocation(lightShader->Program, "model"), 1, GL_FALSE, Mat44f::eye().transpose().ptr());
 
-			glModelWrapper->draw(true,false);
+			glUniform3f(glGetUniformLocation(lightShader->Program, "lightColor"), 0.6f, 0.6f, 0.8f);
+			glUniform3f(glGetUniformLocation(lightShader->Program, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+			glUniform3f(glGetUniformLocation(lightShader->Program, "cameraPos"), phc.pos().x, phc.pos().y, phc.pos().z);
+			litMesh->draw(*lightShader);
 		}
 		
 		glfwSwapBuffers(window);

@@ -27,5 +27,4 @@ void main(){
     specular *= attenuation; 
 
 	color = vec4(diffuse+specular,1.0f);
-    //color = vec4(0.0f,1.0f,0.0f,1.0f);
 } 

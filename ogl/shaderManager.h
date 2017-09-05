@@ -20,8 +20,8 @@ public :
 		flist.clear();
 	};
 	~ShaderManager(){};
-	Shader* shader(std::string name){ 
-		if (shaders.count(name)) return shaders[name]; 
+	Shader* operator[](std::string name){
+		if (shaders.count(name)) return shaders[name];
 		return NULL;
 	}
 private:
