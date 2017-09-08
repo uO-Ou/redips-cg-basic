@@ -85,11 +85,15 @@ namespace redips{
 		const Mat44f& w2c() const { return world2camera; }
 		const Mat44f& glProjection() const { return projection.transpose(); };
 		const Mat44f& glView() const { return world2camera.transpose(); };
-
+		float3 pixelWPos(int x,int y){
+			      float tx = (((0.5f + x) / resolution.x) - 0.5f) * canvaSize.x;
+				  float ty = (((0.5f + y) / resolution.y) - 0.5f) * canvaSize.y;
+				  return (camera2world3 * float3(tx, ty, nearp))+cameraO;
+		}
 		//gen rays in world space
 		Ray getRay(float u, float v) {
-			float x = (u / resolution.width() - 0.5) * canvaSize.x;
-			float y = (v / resolution.height() - 0.5) * canvaSize.y;
+			float x = ((u+0.5f) / resolution.x - 0.5) * canvaSize.x;
+			float y = ((v+0.5f) / resolution.y - 0.5) * canvaSize.y;
 			float3 direction = camera2world3 * float3(x, y, nearp);
 			return Ray(cameraO + direction, direction);
 		}

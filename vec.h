@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdlib>
 #include <iostream>
-#include <constant.h>
+#include "constant.h"
 
 namespace redips{
 	template<typename T>
@@ -131,6 +131,10 @@ namespace redips{
 	public:
 		Mat33() { memset(m, 0, sizeof(T)* 9); }
 		Mat33(T* data){ for (int i = 0; i < 9; i++) m[i / 3][i % 3] = data[i]; };
+
+		Vec3<T> x() const { return Vec3<T>(m[0][0], m[0][1], m[0][2]); }
+		Vec3<T> y() const { return Vec3<T>(m[1][0], m[1][1], m[1][2]); }
+		Vec3<T> z() const { return Vec3<T>(m[2][0], m[2][1], m[2][2]); }
 
 		const T* ptr() const { return (T*)(&(m[0][0])); };
 		T* operator[] (std::size_t idx){ return m[idx]; };

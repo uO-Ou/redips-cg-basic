@@ -3,9 +3,29 @@
 namespace redips{
 	class Particles : public Model{
 	public:
+		const float* ptr()const { return &(spheres[0].x); }
 		Particles(){
 			radius = 0.1f;
 		};
+		void updateAABB(){
+
+		}
+		void buildTree(){
+		
+		}
+		const Material* getMaterial(int index) const{
+			return NULL;
+		}
+		Particles(const char* file){
+			int scnt = 0;
+			freopen(file,"r",stdin);
+			scanf("%d",&scnt); 
+			spheres.resize(scnt);
+			for (int i = 0; i < scnt; i++){
+				scanf("%f %f %f",&spheres[i].x,&spheres[i].y,&spheres[i].z);
+			}
+			fclose(stdin);
+		}
 		~Particles(){};
 		bool intersect(const Ray& ray, HitRecord& record){
 			bool hitted = false;

@@ -12,7 +12,7 @@
 #include "../geos/triangles.h"
 namespace redips{
 	class glMeshWrapper{
-	public:
+	protected:
 		glMeshWrapper(const Triangles* model, bool setup_type = true){
 			this->origion = this;
 			this->visitorCnt = 1;
@@ -115,6 +115,7 @@ namespace redips{
 			vaos = new GLuint[meshCnt];
 			glGenVertexArrays(meshCnt, vaos);
 		}
+	public:
 		~glMeshWrapper(){
 			if ((--(this->origion->visitorCnt)) <= 0){
 				this->origion->releaseBuffer();
@@ -158,9 +159,11 @@ namespace redips{
 			glBindVertexArray(0);
 			this->isVaoBinded = true;
 		}
-		const Triangles* operator()(){ return this->model; }
+		
+		const Triangles* m() const { return this->model; }
+
 		virtual void draw(Shader& shader) = 0;
-		const GLuint* VAOs(){ return vaos; }
+		//const GLuint* VAOs(){ return vaos; }
 	protected:
 		bool isVaoBinded = false;
 		int meshCnt = 0;

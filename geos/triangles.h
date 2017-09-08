@@ -194,9 +194,9 @@ namespace redips{
 			updateAABB();
 		}
 		Triangles(){ setup(); }
-		Triangles(const float3 &boxdim){
+		Triangles(const float3 &boxdim,float3 center = float3(0.0f,0.0f,0.0f)){
 			setup();
-			float3 base = boxdim * -0.5f;
+			float3 base = boxdim * -0.5f + center;
 			unsigned int xs[] {3, 3, 1, 1, 4, 4, 5, 4, 3, 1, 0, 0};
 			unsigned int ys[] {7, 6, 7, 5, 2, 0, 4, 6, 2, 3, 5, 4};
 			unsigned int zs[] {6, 2, 3, 7, 6, 2, 7, 7, 0, 0, 1, 5};

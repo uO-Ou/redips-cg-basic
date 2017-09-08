@@ -19,6 +19,9 @@ namespace redips{
 			}
 			return ret;
 		}
+		const BOX& rawAABB() const{
+			return aabb_raw;
+		}
 	public:
 		virtual const Material* getMaterial(int index) const = 0;
 		virtual float3 diffuseColor(int index, float3 pos) = 0;
