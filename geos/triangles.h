@@ -204,6 +204,16 @@ namespace redips{
 				addTriangle(base + boxdim*float3::bits(xs[i]), base + boxdim*float3::bits(ys[i]), base + boxdim*float3::bits(zs[i]));
 			}
 		}
+		Triangles(const float3 &boxdim, const Mat33f& axises, float3 center = float3(0.0f, 0.0f, 0.0f)){
+			setup();
+			float3 base = center + axises.mix(boxdim*-0.5f);
+			unsigned int xs[] {3, 3, 1, 1, 4, 4, 5, 4, 3, 1, 0, 0};
+			unsigned int ys[] {7, 6, 7, 5, 2, 0, 4, 6, 2, 3, 5, 4};
+			unsigned int zs[] {6, 2, 3, 7, 6, 2, 7, 7, 0, 0, 1, 5};
+			for (int i = 0; i < 12; i++){
+				addTriangle(base + axises.mix(boxdim*float3::bits(xs[i])), base + axises.mix(boxdim*float3::bits(ys[i])), base + axises.mix(boxdim*float3::bits(zs[i])));
+			}
+		}
 		~Triangles(){};
 
 		void addTriangle(float3 a, float3 b, float3 c){

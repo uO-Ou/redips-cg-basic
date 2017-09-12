@@ -23,14 +23,15 @@
 #include <thrust/device_vector.h>
 #include <vec.h>
 
-#define _MAX_GMEM_4_VOXELRESULT_IN_GB_ 2.0
-#define _DIRECTION_CNT_PER_BLOCK_ 16u
-#define _THREAD_NUM_PER_BLOCK_ 1024
-
+#define _MAX_GMEM_4_VOXELRESULT_IN_GB_ 2.0f
+#define _DIRECTION_CNT_PER_BLOCK_ 32u
+#define _THREAD_NUM_PER_BLOCK_ 512
+#define CC(x) {const cudaError_t a = (x); if(a!=cudaSuccess){printf("\ncuda error:%s(err_num=%d)\n",cudaGetErrorString(a),a);cudaDeviceReset();assert(0);}}
 /******************************************************************/
 /**********                          kernels                               ***********/
 /******************************************************************/
-__inline__ __device__ float3 multy(float* mat,const float3& dot){
+
+__device__ float3 multy(float* mat,const float3& dot){
 	float3 ret;
 	float winv = 1.0f/((mat[12] * dot.x) + (mat[13] * dot.y) + (mat[14] * dot.z) + mat[15]);
 	ret.x = ((mat[0] * dot.x) + (mat[1] * dot.y) + (mat[2] * dot.z) + mat[3])*winv;
@@ -38,7 +39,6 @@ __inline__ __device__ float3 multy(float* mat,const float3& dot){
 	ret.z = ((mat[8] * dot.x) + (mat[9] * dot.y) + (mat[10] * dot.z) + mat[11])*winv;
 	return ret;
 }
-
 /*__device__ unsigned char atomicOrChar(unsigned char* address, unsigned char val){
 	unsigned int *base_address = (unsigned int *)((size_t)address & ~3);
 	unsigned int selectors[] = { 0x3214, 0x3240, 0x3410, 0x4210 };
@@ -55,7 +55,6 @@ __inline__ __device__ float3 multy(float* mat,const float3& dot){
 	} while (assumed != old);
 	return old;
 }*/
-
 __global__ void calcnt(unsigned int *input,unsigned int *output,int workload){
 	const unsigned int gap = gridDim.x * blockDim.x;
 	unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -70,18 +69,18 @@ __global__ void calcnt(unsigned int *input,unsigned int *output,int workload){
 		output[tid] = cnt;
 	}
 }
-__global__ void gendots(unsigned int *input, unsigned int *presum, float3* dots, int res2, int workload, redips::float3 boxcenter, redips::float3 boxdim){
+__global__ void gendots(unsigned int *input, unsigned int *presum, float3* dots, int precision, int workload, redips::float3 boxcenter, redips::float3 boxdim){
 	const unsigned int gap = gridDim.x * blockDim.x;
 	unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
-	float resolution = 1u << res2;
+	float resolution = 1u << precision;
 	float3 dot;
 	for (; tid < workload; tid += gap){
 		unsigned int status = input[tid];
 		if (!status) continue;
 		float3* ptrf3 = dots + presum[tid];
-		unsigned int voxelx = tid >> (res2+res2 - 5);
-		unsigned int voxely = (tid&((1u<<(res2+res2-5))-1u)) >> (res2 - 5);
-		unsigned int voxelz = (tid&((1u<<(res2 - 5)) - 1)) << 5;
+		unsigned int voxelx = tid >> (precision + precision - 5);
+		unsigned int voxely = (tid&((1u << (precision + precision - 5)) - 1u)) >> (precision - 5);
+		unsigned int voxelz = (tid&((1u << (precision - 5)) - 1)) << 5;
 		
 		for (int i = 0; i < 32; i++){
 			if (status&(1u << i)) {
@@ -93,15 +92,19 @@ __global__ void gendots(unsigned int *input, unsigned int *presum, float3* dots,
 		}
 	}
 }
-__global__ void transform(float3* dots, unsigned dotcnt, redips::float3 center, float* mats,unsigned int sid,unsigned int eid,unsigned int precision,unsigned int * result){
-	const unsigned int gap = blockDim.x;
+__inline__ __device__ unsigned int  mclamp(unsigned int a, unsigned int b, unsigned c){
+	if (a <= b) return b;
+	if (a >= c) return c;
+	return a;
+}
+__global__ void transform(float3* dots, int dotcnt, redips::float3 center, float* mats,unsigned int sid,unsigned int eid,unsigned int precision,unsigned int * result){
 	unsigned int tid = threadIdx.x;
 	unsigned int matSId = blockIdx.x * _DIRECTION_CNT_PER_BLOCK_;
 	unsigned int matEId = matSId + _DIRECTION_CNT_PER_BLOCK_ - 1; if (matEId + sid > eid) matEId = eid - sid;
 	unsigned int matCnt = matEId - matSId + 1;
 	unsigned int resolution = 1u << precision;
 	unsigned int shiftleft = precision * 3 - 5;            //*
-	unsigned int * resultPtr = result + (matSId<<shiftleft); //*
+	unsigned int *resultPtr = &result[(matSId<<shiftleft)]; //*
 
 	__shared__ float mats_sm[_DIRECTION_CNT_PER_BLOCK_ << 4];
 	{
@@ -112,19 +115,20 @@ __global__ void transform(float3* dots, unsigned dotcnt, redips::float3 center, 
 		__syncthreads();
 	}
 	
-	
 	unsigned int res2 = resolution >> 1;
-	for (; tid < dotcnt; tid += gap){
+	for (; tid < dotcnt; tid += _THREAD_NUM_PER_BLOCK_){
 		float3 dot = dots[tid]; 
 		dot.x -= center.x; dot.y -= center.y; dot.z -= center.z;
 		for (unsigned int mid = 0; mid < matCnt; mid++){  // mid+sid 
-			float3 ndc = multy(mats_sm+(mid<<4),dot);
-			unsigned int tx = 0.5f + ndc.x * res2 + res2;  tx = CLAMP(tx, 0, resolution - 1);
-			unsigned int ty = 0.5f + ndc.y * res2 + res2;  ty = CLAMP(ty, 0, resolution - 1);
-			unsigned int tz = 0.5f + ndc.z * res2 + res2;  tz = CLAMP(tz, 0, resolution - 1);
+			float3 ndc = multy(&(mats_sm[(mid<<4)]),dot);
 			
-			atomicOr((resultPtr + (mid << shiftleft)) + ((tx << ((precision << 1) - 5)) + (ty << (precision - 5)) + (tz >> 5)),1u<<(tz&31u));
-			
+			unsigned int tx = 0.5f + ndc.x * res2 + res2;  tx = mclamp(tx, 0, resolution - 1);
+			unsigned int ty = 0.5f + ndc.y * res2 + res2;  ty = mclamp(ty, 0, resolution - 1);
+			unsigned int tz = 0.5f + ndc.z * res2 + res2;  tz = mclamp(tz, 0, resolution - 1);
+
+			unsigned int offset = (mid<<shiftleft) + ((tx<<(precision*2 - 5)) + (ty<<(precision - 5)) + (tz>>5));
+
+			atomicOr(&resultPtr[offset], (1u << (tz & 31u)));
 		}
 	}
 }
@@ -141,7 +145,7 @@ bool cudaInit(){
 }
 
 extern "C"
-GLuint packVoxel(GLuint invbo, int res2, unsigned int &TOTAL_VOXEL_CNT,redips::float3 boxcenter, redips::float3 boxdim){
+GLuint generateVoxelDots(GLuint invbo, int precision, unsigned int &TOTAL_VOXEL_CNT, redips::float3 boxcenter, redips::float3 boxdim){
 	GLuint outvbo = 0;
 	unsigned int* inputptr;  float3* outptr; size_t num_bytes;
 	struct cudaGraphicsResource *cuda_input,*cuda_output;
@@ -151,10 +155,11 @@ GLuint packVoxel(GLuint invbo, int res2, unsigned int &TOTAL_VOXEL_CNT,redips::f
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&inputptr, &num_bytes, cuda_input));
 	SDK_CHECK_ERROR_GL();
 	printf("[cuda] : mapped %d bytes voxel input\n", num_bytes);
+	
 	//step2: compact, calculate presum
-	unsigned int workload = 1u << (res2*3-5);
+	unsigned int workload = 1u << (precision * 3 - 5);
 	unsigned int* presum_dev;
-	checkCudaErrors(cudaMalloc((void**)&presum_dev,workload*sizeof(unsigned int)));
+	checkCudaErrors(cudaMalloc((void**)&presum_dev, workload*sizeof(unsigned int)));
 	calcnt << <(workload - 1) / 512 + 1, 512 >> >(inputptr,presum_dev,workload);
 	cudaDeviceSynchronize();
 	thrust::device_ptr<unsigned int > presumPtr(presum_dev);
@@ -162,6 +167,7 @@ GLuint packVoxel(GLuint invbo, int res2, unsigned int &TOTAL_VOXEL_CNT,redips::f
 	cudaDeviceSynchronize();
 	checkCudaErrors(cudaMemcpy(&TOTAL_VOXEL_CNT, presum_dev + workload - 1, sizeof(unsigned int), cudaMemcpyDeviceToHost));
 	printf("[cuda] : total voxel cnt is %d\n",TOTAL_VOXEL_CNT);
+	
 	//step3: new buffer,generate dots 
 	glGenBuffers(1,&outvbo);
 	glBindBuffer(GL_ARRAY_BUFFER, outvbo);
@@ -170,8 +176,8 @@ GLuint packVoxel(GLuint invbo, int res2, unsigned int &TOTAL_VOXEL_CNT,redips::f
 	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_output, outvbo, cudaGraphicsMapFlagsWriteDiscard));
 	checkCudaErrors(cudaGraphicsMapResources(1, &cuda_output, 0));
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&outptr, &num_bytes, cuda_output));
-	printf("[cuda] : mapped %d bytes voxel out\n", num_bytes);
-	gendots << <(workload - 1) / 512 + 1, 512 >> >(inputptr, presum_dev, outptr, res2, workload,boxcenter,boxdim);
+	printf("[cuda] : mapped %d bytes[%.4f M] voxel out\n", num_bytes,num_bytes * 1.0f / (1u<<20));
+	gendots << <(workload - 1) / 512 + 1, 512 >> >(inputptr, presum_dev, outptr, precision, workload, boxcenter, boxdim);
 	
 	//step4. unmap, release memory
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_output, 0));
@@ -181,60 +187,73 @@ GLuint packVoxel(GLuint invbo, int res2, unsigned int &TOTAL_VOXEL_CNT,redips::f
 }
 
 extern "C"
-void mdVoxelization(GLuint dotsvbo, int dotscnt, redips::float3 dotscenter, int rotx, int roty,const float* mats, unsigned int presicion,std::string outputdir){
+void mdVoxelization(GLuint dotsvbo,unsigned int dotscnt, redips::float3 dotscenter, int rotx, int roty,const float* mats, unsigned int presicion,std::string outputdir){
+	   //prepare
 	   float MEM_PER_DIRECTION_MB = (1u << (presicion * 3 - 3))*1.0f / (1u << 20);
-	   size_t DIRECTION_CNT_PER_PROCESS = _MAX_GMEM_4_VOXELRESULT_IN_GB_*1024.0f / MEM_PER_DIRECTION_MB;
-	   printf("[cuda] : MEM_PER_DIRECTION_MB is %.4f, DIRECTION_CNT_PER_PROCESS %lld using %.4fg memory\n", MEM_PER_DIRECTION_MB, DIRECTION_CNT_PER_PROCESS, DIRECTION_CNT_PER_PROCESS*MEM_PER_DIRECTION_MB/1024);
-	   unsigned int * rbuffer = new unsigned int[DIRECTION_CNT_PER_PROCESS*(1u<<(presicion*3-5))];
+	   int DIRECTION_CNT_PER_PROCESS = _MAX_GMEM_4_VOXELRESULT_IN_GB_ * 1024.0f / MEM_PER_DIRECTION_MB;
+	   size_t result_uint_cnt = DIRECTION_CNT_PER_PROCESS*(1u << (presicion * 3 - 5));
+	   printf("[cuda] : MEM_PER_DIRECTION_MB is %.4f, DIRECTION_CNT_PER_PROCESS %lld using %.4f g memory\n", MEM_PER_DIRECTION_MB, DIRECTION_CNT_PER_PROCESS, DIRECTION_CNT_PER_PROCESS*MEM_PER_DIRECTION_MB/1024.0f);
+	   unsigned int * rbuffer = new unsigned int[result_uint_cnt];
 	   char strBuffer[256];  sprintf(strBuffer, "%s/%d", outputdir.c_str(), (1u << presicion)); outputdir = std::string(strBuffer)+"/";
 	   _mkdir(strBuffer);
-
+	   
+	   //allocate memory
 	   float* dots_dev; size_t num_bytes;
 	   struct cudaGraphicsResource *cuda_vbo_binder;
 	   checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_binder, dotsvbo, cudaGraphicsMapFlagsReadOnly));
 	   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_vbo_binder, 0));
 	   checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&dots_dev, &num_bytes, cuda_vbo_binder));
-	   printf("[cuda] : mapped %d bytes dots\n", num_bytes);
+	   printf("[cuda] : mapped %d bytes[%.fM] dots\n", num_bytes,num_bytes*1.0f/1024/1024);
 	   
 	   float* mats_dev;
-	   checkCudaErrors(cudaMalloc((void**)&mats_dev, sizeof(float)* 16 * rotx*roty));
-	   checkCudaErrors(cudaMemcpy(mats_dev, mats, sizeof(float)* 16 * rotx*roty, cudaMemcpyHostToDevice));
+	   checkCudaErrors(cudaMalloc((void**)&mats_dev, sizeof(float)* 16 * rotx * roty));
+	   checkCudaErrors(cudaMemcpy(mats_dev, mats, sizeof(float)* 16 * rotx * roty, cudaMemcpyHostToDevice));
 
 	   unsigned int* result_dev;
-	   checkCudaErrors(cudaMalloc((void**)&result_dev, DIRECTION_CNT_PER_PROCESS*(1u << (presicion * 3 - 3))));
-
+	   checkCudaErrors(cudaMalloc((void**)&result_dev, result_uint_cnt*sizeof(unsigned int)));
+	   thrust::device_ptr<unsigned int > resultSPtr(result_dev);
+	   thrust::device_ptr<unsigned int > resultEPtr(result_dev + result_uint_cnt);
+	   
 	   //launch kernels
 	   int cid = 0;
 	   StopWatchInterface *timer = 0;
 	   sdkCreateTimer(&timer);
 	   cudaDeviceSynchronize();
 	   sdkStartTimer(&timer);
+	   
 	   for (int sid = 0; ;sid += DIRECTION_CNT_PER_PROCESS){
-		   int tid = MIN(sid + DIRECTION_CNT_PER_PROCESS - 1, rotx*roty - 1);
+		   int tid = std::min(sid + DIRECTION_CNT_PER_PROCESS - 1, rotx*roty - 1);
 		   int blockCnt = ((tid - sid + 1) - 1) / _DIRECTION_CNT_PER_BLOCK_ + 1;
 
-		   transform <<<blockCnt, _THREAD_NUM_PER_BLOCK_ >>>((float3*)dots_dev, dotscnt, dotscenter,mats_dev,sid, tid, (presicion), result_dev);
-		   cudaDeviceSynchronize();
-		   checkCudaErrors(cudaMemcpy(rbuffer, result_dev, size_t(tid - sid + 1)*(1u<<(presicion*3-3)),cudaMemcpyDeviceToHost));
-		   cudaDeviceSynchronize();
+		   printf("[cuda] : dealing %d - %d\n",sid,tid);
+		   thrust::fill(resultSPtr, resultEPtr,0u);
+		   CC(cudaDeviceSynchronize());
 
+		   transform << <blockCnt, _THREAD_NUM_PER_BLOCK_ >> >((float3*)dots_dev, dotscnt, dotscenter, mats_dev, sid, tid, presicion, result_dev);
+		   CC(cudaDeviceSynchronize());
+
+		   printf("[cuda] : copying to cpu \n");
+		   checkCudaErrors(cudaMemcpy(rbuffer, result_dev, size_t(tid - sid + 1)*(1u<<(presicion*3-3)),cudaMemcpyDeviceToHost));
+		   CC(cudaDeviceSynchronize());
+		   
+		   printf("[cuda] : writing to hard disk \n");
 		   unsigned int *uintptr = rbuffer;
 		   unsigned int cnt_per_line = (1u << (presicion - 5));
 		   for (int id = sid; id <= tid; id++){
 			   int anglex = id % rotx;
 			   int angley = id / rotx;
 			   sprintf(strBuffer, "x%02d_y%02d.txt", anglex, angley);
+
 			   freopen((outputdir+strBuffer).c_str(),"w",stdout);
-			   
 			   for (unsigned int ind = 0; ind < (1u << (presicion * 3 - 5)); ind+=cnt_per_line){
 				   for (unsigned int step = 0; step < cnt_per_line; step++) printf("%u ",uintptr[ind+step]); puts("");
 			   }
-
 			   fclose(stdout);
+
 			   uintptr += (1u << (presicion * 3 - 5));
 		   }
 		   freopen("CON","w",stdout);
-
+		   
 		   printf("[cuda] : iteration %d finish \n", cid++);
 		   if (tid >= rotx*roty - 1) break;
 	   }

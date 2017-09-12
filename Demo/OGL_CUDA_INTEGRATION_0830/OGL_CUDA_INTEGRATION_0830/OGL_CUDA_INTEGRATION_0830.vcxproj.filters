@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="voxelizer.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ColumnChooser.h">
+      <Filter>heads</Filter>
+    </ClInclude>
+    <ClInclude Include="voxelizer.h">
+      <Filter>heads</Filter>
+    </ClInclude>
+    <ClInclude Include="Compare.h">
+      <Filter>heads</Filter>
+    </ClInclude>
+    <ClInclude Include="VoxelMesh.h">
+      <Filter>mesh wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="modelBoxMesh.h">
+      <Filter>mesh wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="ManySimpleObj.h">
+      <Filter>mesh wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="movingphc.h">
+      <Filter>heads</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\manySimpleObj.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\manySimpleObj.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\modelBox.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\modelBox.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\orthogonal.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\orthogonal.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\texLight.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\texLight.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\voxelizer.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\voxelizer.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\light.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\light.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\drawLine.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\drawLine.vs">
+      <Filter>shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{7fc8ef51-5b94-4707-92a3-d32d078bebff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="heads">
+      <UniqueIdentifier>{46bf8dab-2019-4800-a01f-fb803e866959}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mesh wrappers">
+      <UniqueIdentifier>{cdbd273d-d24c-45f6-a48e-1da82423ca83}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

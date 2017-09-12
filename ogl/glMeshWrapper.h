@@ -115,6 +115,12 @@ namespace redips{
 			vaos = new GLuint[meshCnt];
 			glGenVertexArrays(meshCnt, vaos);
 		}
+		void drawAllMeshes(){
+			for (int i = 0; i < meshCnt; i++){
+				glBindVertexArray(vaos[i]);
+				glDrawArrays(GL_TRIANGLES, 0, meshFaceCnt[i] * 3);
+			}
+		}
 	public:
 		~glMeshWrapper(){
 			if ((--(this->origion->visitorCnt)) <= 0){
@@ -125,9 +131,9 @@ namespace redips{
 			meshFaceTypes.clear();
 			mtlTextureHandle.clear();
 
-			if (vaos) {
+			if (meshCnt) {
+				glDeleteVertexArrays(meshCnt, vaos);
 				delete[] vaos;
-				if (meshCnt) glDeleteVertexArrays(meshCnt, vaos);
 			}
 			if(vbos) delete[] vbos;
 		}
