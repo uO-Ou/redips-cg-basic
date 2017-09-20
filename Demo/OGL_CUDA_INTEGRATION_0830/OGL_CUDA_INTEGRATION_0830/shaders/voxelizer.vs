@@ -6,8 +6,10 @@ uniform mat4 model;
 uniform mat3 swizzler;
 
 out vec3 FragPos;
+out vec4 Inworld;
+
 void main(){
-    vec3 inworld = ((model * vec4(position,1.0f)).xyz);
-    gl_Position = projection * vec4((swizzler * inworld),1.0f);
+    Inworld = ((model * vec4(position,1.0f)));
+    gl_Position = projection * vec4((swizzler * Inworld.xyz),1.0f);
 	FragPos = (transpose(swizzler))*((gl_Position.xyz)*0.5f+0.5f);
 }

@@ -11,6 +11,12 @@ bool cmp_uint2(const uint2& a,const uint2& b){
 	return a.y > b.y;
 };
 
+class Column256{
+public:
+	uint v[8];
+	uint& operator[] (int idx) { return v[idx]; };
+};
+
 class Column128{
 public:
 	uint v[4];

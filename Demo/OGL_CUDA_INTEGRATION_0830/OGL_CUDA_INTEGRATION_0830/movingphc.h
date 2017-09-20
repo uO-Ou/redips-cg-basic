@@ -26,12 +26,15 @@ public:
 		update();
 	}
 	void update(){
+		//ticker = 730;  ///////////////////////delete
+
 		float rate = (ticker - intervals[curc]) * 1.0f / (intervals[curc+1]-intervals[curc]);
 		float3 pos = params[curc].x()*(1 - rate) + params[curc + 1].x()*rate;
 		float3 focus = params[curc].y()*(1 - rate) + params[curc + 1].y()*rate;
 		float3 up = params[curc].z()*(1 - rate) + params[curc + 1].z()*rate;
 		this->lookAt(pos,focus,up);
-		ticker++; if (ticker >= total){
+		ticker++;  
+		if (ticker >= total){
 			ticker = 0; curc = 0;
 		}
 		if (ticker >= intervals[curc + 1]){

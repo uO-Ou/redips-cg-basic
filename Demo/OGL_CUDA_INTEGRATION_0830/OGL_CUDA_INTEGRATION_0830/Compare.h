@@ -24,11 +24,19 @@ public:
 
 		uint_cnt_per_direction = 1u << (precision * 3 - 5);
 
-		load128("E:/Documents/papers/ppp/ppp/result/garden/128/");
+		load128("E:/Documents/papers/ppp/ppp/result/trees/128/");
 
 		puts("[Compare] : init finish");
 	};
 	~Compare(){};
+	string split(unsigned int data){
+		     string ret; ret.resize(32);
+			 for (int i = 0; i < 32; i++){
+				 ret[i] = (data & 1u)>0 ? '1' : '0';
+				 data >>= 1;
+			 }
+			 return ret;
+	};
 	bool check(float3 start,float3 end){
 		   float3 ray = end - start;
 		   start = start - mcenter;        //转换到物体坐标系，这样其实是不对的，
@@ -41,16 +49,18 @@ public:
 			   float tmp = fabs(ray.dot(rmats[i].z()));
 			   if (tmp>maxl) maxl = tmp, maxId = i;
 		   }
-		   //printf(" [%f] ",ray.unit().dot(rmats[maxId].z()));
 
 		   //找到该方向下的xy
 		   float3 center = (start + end)*0.5f;
 		   float3 midp = (pmats[maxId] * float4(center,1.0f)).vec3();
 		   uint x = ((midp.x*0.5f + 0.5f)*resolution + 0.5f);
 		   uint y = ((midp.y*0.5f + 0.5f)*resolution + 0.5f);
-		   x = CLAMP(x, 0, (resolution - 1));
-		   y = CLAMP(y, 0, (resolution - 1));
+		   if (x < 0 || x >= resolution) return false;
+		   if (y < 0 || y >= resolution) return false;
+		   //x = CLAMP(x, 0, (resolution - 1));
+		   //y = CLAMP(y, 0, (resolution - 1));
 
+		   //printf(" [%f] maxid is %d ,x %u,y %u",ray.unit().dot(rmats[maxId].z()),maxId,x,y);
 		   //找到该方向下的z1,z2
 		   float3 z1 = (pmats[maxId] * float4(start, 1.0f)).vec3();
 		   float3 z2 = (pmats[maxId] * float4(end, 1.0f)).vec3();
@@ -115,7 +125,6 @@ private:
 	uint rotx, roty;
 	unsigned int precision;
 	unsigned int resolution;
-	const Particles* lights;
 	Mat33f rmats[8100];
 	Mat44f pmats[8100];
 	char strBuffer[222];

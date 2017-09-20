@@ -1,0 +1,17 @@
+name=sponza
+
+model_path=E:/Documents/models/Sponza/sponza.obj
+
+useMovingPhc=false
+
+phc_intrinsic=[90.0,1.0,0.1,1000000]
+phc_extrinsic=[0,-11.6513,19.2842,0,-12.957,0,0,0.9977,-0.0676]
+movingphc_path=E:/Documents/models/Sponza/cls/CameraControlFile.txt
+
+static_lights=E:/Documents/models/Sponza/cls/lights.txt
+
+voxelization_frags_resolution=9
+voxelization_resolution=8
+
+mdvoxelization=on
+voxelization_result_dir=E:/Documents/papers/ppp/ppp/result/sponza

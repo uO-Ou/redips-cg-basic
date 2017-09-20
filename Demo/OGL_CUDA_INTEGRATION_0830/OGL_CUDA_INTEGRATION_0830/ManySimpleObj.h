@@ -13,13 +13,13 @@ public:
 			glDrawArraysInstanced(GL_TRIANGLES, 0, 3 * meshFaceCnt[i],objCnt);
 		}
 	}
-	void setPositions(GLuint vbo,int cnt){
+	void setPositions(GLuint vbo,size_t stride,int cnt){
 		this->transvbo = vbo;
 		this->objCnt = cnt;
 		isPosSetted = true;
 		needReleaseBuf = false;
 
-		bindTransvbo();
+		bindTransvbo(stride);
 	}
 	void setPositions(const float* poses, int cnt){
 		glGenBuffers(1, &transvbo);
@@ -29,7 +29,7 @@ public:
 		isPosSetted = true;
 		needReleaseBuf = true;
 
-		bindTransvbo();
+		bindTransvbo(0);
 	};
 	~ManySimpleObj(){
 		if (needReleaseBuf) glDeleteBuffers(1, &transvbo);
@@ -39,11 +39,11 @@ private:
 	GLuint transvbo;
 	bool needReleaseBuf = false;
 	bool isPosSetted = false;
-	void bindTransvbo(){
+	void bindTransvbo(size_t stride){
 		for (int i = 0; i < meshCnt; i++){
 			glBindVertexArray(vaos[i]);
 			glBindBuffer(GL_ARRAY_BUFFER, transvbo);
-			glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+			glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, NULL);
 			glEnableVertexAttribArray(3);
 			glVertexAttribDivisor(3, 1);
 		}
