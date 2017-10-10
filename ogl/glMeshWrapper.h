@@ -10,10 +10,13 @@
 #include "shader.h"
 #include "glTexture.h"
 #include "../geos/triangles.h"
+
+//setup&1 == 1, setup per mtl         else per group
+//setup&2 == 1,generate geometry norm  else use default
 namespace redips{
 	class glMeshWrapper{
 	protected:
-		glMeshWrapper(const Triangles* model, bool setup_type = true){
+		glMeshWrapper(const Triangles* model, bool genGeoNormal = false,bool setup_type = true){
 			this->origion = this;
 			this->visitorCnt = 1;
 			this->model = model;
@@ -25,12 +28,12 @@ namespace redips{
 			if (setup_type){
 				for (int i = 0; i < mesh->mtllib.size(); i++) {
 					meshFaceCnt[i] = 0;
-					meshFaceTypes[i] = _unknown_;
+					meshFaceTypes[i] = _unknown_face_type_;
 				}
 				for (int i = 0; i < mesh->groups.size(); i++) {
 					int mid = mesh->groups[i].mtlId;
 					meshFaceCnt[mid] += mesh->groups[i].faceCnt;
-					if (meshFaceTypes[mid] == _unknown_) meshFaceTypes[mid] = mesh->groups[i].faceType;
+					if (meshFaceTypes[mid] == _unknown_face_type_) meshFaceTypes[mid] = mesh->groups[i].faceType;
 					else{
 						if (meshFaceTypes[mid] != mesh->groups[i].faceType){
 							printf("[glMeshWrapper] warning! : groups with same material have different face type, setup_type set to false");
@@ -71,8 +74,8 @@ namespace redips{
 			vbos = new GLuint[meshCnt];
 			glGenBuffers(meshCnt, vbos);
 
-			if (setup_type) setup_permtl();
-			else setup_pergroup();
+			if (setup_type) setup_permtl(genGeoNormal);
+			else setup_pergroup(genGeoNormal);
 
 			//generate textures
 			textureCnt = mesh->mtllib.loadedImage.size();
@@ -183,7 +186,7 @@ namespace redips{
 		//mtl->image, texture-id map
 		std::map<FImage*, GLuint> mtlTextureHandle;
 	private:
-		void setup_pergroup(){
+		void setup_pergroup(bool genGeometryNormal){
 			int SIZE_PER_VERT[] = { 0, 3 /*_single_*/, 3 + 3/*_withnormal_*/, 3 + 2 + 3/*_withtex_*/ };
 			//copy data
 			const std::vector<float3>& vertices = mesh->vertices;
@@ -202,7 +205,7 @@ namespace redips{
 					(*ptrf3++) = vertices[indices.z];
 				}
 				//copy normals if exists, type float3
-				if (meshFaceTypes[i] >= _withnormal_){
+				if (meshFaceTypes[i] >= _withnormal_ && genGeometryNormal==false){
 					float3* ptrf3 = (float3*)(normalBuffer);
 					int nid = mesh->groups[i].nsid;
 					for (int neid = nid + faceCnt; nid < neid; nid++){
@@ -211,6 +214,19 @@ namespace redips{
 						(*ptrf3++) = normals[indices.y];
 						(*ptrf3++) = normals[indices.z];
 					}
+				}
+				//generate geometry normal
+				else if (genGeometryNormal){
+					float3* ptrf3 = (float3*)(normalBuffer);
+					float3* vptrf3 = (float3*)(vertexBuffer);
+					for (int vid = 0; vid < faceCnt; vid++){
+						float3 edg1 = vptrf3[1] - vptrf3[0];
+						float3 edg2 = vptrf3[2] - vptrf3[1];
+						float3 norm = (edg1 ^ edg2).unit();
+						ptrf3[0] = ptrf3[1] = ptrf3[2] = norm;
+						vptrf3 += 3; ptrf3 += 3;
+					}
+					if (meshFaceTypes[i] < _withnormal_) meshFaceTypes[i] = _withnormal_;
 				}
 				//copy tex-coords if exists, type float2
 				if (meshFaceTypes[i] == _withtex_){
@@ -231,11 +247,11 @@ namespace redips{
 				if (meshFaceTypes[i] >= _withnormal_) glBufferSubData(GL_ARRAY_BUFFER, faceCnt * 3 * 3 * sizeof(float), faceCnt * 3 * 3 * sizeof(float), normalBuffer);
 				if (meshFaceTypes[i] == _withtex_) glBufferSubData(GL_ARRAY_BUFFER, faceCnt * 3 * 6 * sizeof(float), faceCnt * 3 * 2 * sizeof(float), texcoordBuffer);
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
-				std::cout << "[glMeshWrapper] : " << mesh->groups[i].name << " transfered" << std::endl;
+				//std::cout << "[glMeshWrapper] : " << mesh->groups[i].name << " transfered" << std::endl;
 			}
 			std::cout << "[glMeshWrapper] : copy mesh to gpu finish" << std::endl;
 		}
-		void setup_permtl(){
+		void setup_permtl(bool genGeometryNormal){
 			int SIZE_PER_VERT[] = { 0, 3 /*_single_*/, 3 + 3/*_withnormal_*/, 3 + 2 + 3/*_withtex_*/ };
 			//copy data
 			const std::vector<float3>& vertices = mesh->vertices;
@@ -262,7 +278,7 @@ namespace redips{
 						(*vptr++) = vertices[indices.z];
 					}
 					//copy normals if exists, type float3
-					if (mtype >= _withnormal_){
+					if (mtype >= _withnormal_ && genGeometryNormal==false){
 						int nid = mesh->groups[j].nsid;
 						for (int neid = nid + faceCnt; nid < neid; nid++){
 							const int3& indices = mesh->faces_vn[nid];
@@ -270,6 +286,19 @@ namespace redips{
 							(*nptr++) = normals[indices.y];
 							(*nptr++) = normals[indices.z];
 						}
+					}
+					//generate geometry normal
+					else if (genGeometryNormal){
+						float3* ptrf3 = (float3*)(normalBuffer);
+						float3* vptrf3 = (float3*)(vertexBuffer);
+						for (int vid = 0; vid < faceCnt; vid++){
+							float3 edg1 = vptrf3[1] - vptrf3[0];
+							float3 edg2 = vptrf3[2] - vptrf3[1];
+							float3 norm = (edg1 ^ edg2).unit();
+							ptrf3[0] = ptrf3[1] = ptrf3[2] = norm;
+							vptrf3 += 3; ptrf3 += 3;
+						}
+						if (meshFaceTypes[i] < _withnormal_) meshFaceTypes[i] = _withnormal_;
 					}
 					//copy tex-coords if exists, type float2
 					if (mtype == _withtex_){
@@ -289,7 +318,7 @@ namespace redips{
 				if (meshFaceTypes[i] >= _withnormal_) glBufferSubData(GL_ARRAY_BUFFER, meshFaceCnt[i] * 3 * 3 * sizeof(float), meshFaceCnt[i] * 3 * 3 * sizeof(float), normalBuffer);
 				if (meshFaceTypes[i] == _withtex_) glBufferSubData(GL_ARRAY_BUFFER, meshFaceCnt[i] * 3 * 6 * sizeof(float), meshFaceCnt[i] * 3 * 2 * sizeof(float), texcoordBuffer);
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
-				std::cout << "[glMeshWrapper] : " << mesh->mtllib[i]->name << " transfered" << std::endl;
+				//std::cout << "[glMeshWrapper] : " << mesh->mtllib[i]->name << " transfered" << std::endl;
 			}
 			std::cout << "[glMeshWrapper] : copy mesh to gpu finish" << std::endl;
 		}

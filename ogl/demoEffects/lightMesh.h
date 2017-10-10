@@ -2,7 +2,7 @@
 #include <ogl/glMeshWrapper.h>
 class LightMesh : public glMeshWrapper{
 public:
-	LightMesh(const Triangles* model, bool setup_type = true) : glMeshWrapper(model, setup_type){
+	LightMesh(const Triangles* model, unsigned int setup_type = 1u) : glMeshWrapper(model, setup_type & 2u, setup_type & 1u){
 		bindVaoAttribData(0, 1, -1);
 	};
 	LightMesh(const glMeshWrapper& another) : glMeshWrapper(another){

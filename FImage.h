@@ -1,5 +1,6 @@
 #pragma once
 #include "FreeImage/FreeImage.h"
+#include <vec.h>
 namespace redips{
 	class FImage{
 	public:
@@ -20,27 +21,46 @@ namespace redips{
 			if (dib) FreeImage_Unload(dib);
 		};
 		int width, height, bpp;
-		float3 tex2d(float u, float v) const{
+		Vec3<float> tex2d(float u, float v) const{
 			int tu = u*width; int tv = v*height;
 			BYTE *bits = FreeImage_GetScanLine(dib, tv);
 			if (bpp == 24 || bpp == 32){
 				int step = bpp / 8;
-				return float3(bits[tu * step + 0] / 255.0f, bits[tu * step + 1] / 255.0f, bits[tu * step + 2] / 255.0f);
+				return Vec3<float>(bits[tu * step + 0] / 255.0f, bits[tu * step + 1] / 255.0f, bits[tu * step + 2] / 255.0f);
 			}
 			else if (bpp == 8){
 				float tfloat = bits[tu] / 255.0f;
-				return float3(tfloat);
+				return Vec3<float>(tfloat);
 			}
 			else{
 				printf("[FImage] : unsupported bpp %d\n", bpp);
-				return float3(0, 1, 0);
+				return Vec3<float>(0, 1, 0);
 			}
 		}
 		BYTE* ptr() const{
 			if (dib) return FreeImage_GetBits(dib);
 			return NULL;
 		}
-	private:
+	public:
+		static bool saveImage(const BYTE* bytes, int width, int height, int bpp, const char* path){
+			FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
+			fif = FreeImage_GetFileType(path);
+			if (fif == FIF_UNKNOWN){ fif = FreeImage_GetFIFFromFilename(path); }
+			if (fif == FIF_UNKNOWN){
+				printf("[FreeImage] : unsupported file format, save picture [%s] failed \n", path); return false;
+			}
+
+			FIBITMAP* bitmap = FreeImage_Allocate(width, height, bpp*8, 8, 8, 8);
+			for (int y = 0; y < height; y++){
+				BYTE* bits = FreeImage_GetScanLine(bitmap, y);
+				for (int x = 0; x < width; x++, bits += bpp){
+					for (int i = 0; i < bpp; i++) bits[i] = *(bytes++);
+				}
+			}
+			bool bSuccess = FreeImage_Save(fif, bitmap, path, 0);
+			FreeImage_Unload(bitmap);
+			return bSuccess;
+		}
 		static FIBITMAP* read(const char *picname){
 			FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 			fif = FreeImage_GetFileType(picname);
@@ -51,6 +71,8 @@ namespace redips{
 			}
 			return NULL;
 		}
+
+	private:
 		FIBITMAP *dib = NULL;
 		FREE_IMAGE_TYPE imageType;
 	};

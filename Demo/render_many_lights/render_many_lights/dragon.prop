@@ -1,0 +1,30 @@
+name=test
+
+draw_chassis=false
+model_path=C:/Users/Asrock/Desktop/dragon.obj
+//model_path=E:/Documents/models/CornellBox-Glossy.obj
+sphere_path=E:/Documents/models/spheres/Sphere2.obj
+
+camera_type=noauto
+frame_range=[1,500]
+
+phc_intrinsic=[60.0f,1.0,0.1,1000000]
+phc_extrinsic=[0,-11.6513,19.2842,0,-12.957,0,0,0.9977,-0.0676]
+movingphc_path=E:/Documents/models/Sponza/cls/CameraControlFile.txt
+
+static_lights=E:/Documents/models/Sponza/cls/lights.txt
+
+//0,choose column&gen index ; 1,gen index;
+//>=0,use compressed result,<0 dont use
+compress_option=0
+
+voxelization_frags_resolution=9
+voxelization_resolution=7
+box_type=false
+mdvoxelization=off
+mdv_save_result=false
+voxelization_result_dir=E:/Documents/papers/ppp/ppp/result/dragon
+
+meng_result=D:/孟学长程序-用完即删/AnalyseData/Garden/ourresult570
+rt_result=D:/孟学长程序-用完即删/AnalyseData/Garden/rtresult570
+mine_result=E:/Documents/papers/ppp/ppp/result/dragon/viser.txt

@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="voxelizer.cu" />
+    <CudaCompile Include="mesh.cu">
+      <Filter>Optix\cuda files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="ray.cu">
+      <Filter>Optix\cuda files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="blocker.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="FrameTimer.cpp">
+      <Filter>孟学长代码</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="modelBoxMesh.h">
+      <Filter>mesh wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="ManySimpleObj.h">
+      <Filter>mesh wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="voxelizer.h">
+      <Filter>mesh wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="autophc.h">
+      <Filter>heads</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameTimer.h">
+      <Filter>孟学长代码</Filter>
+    </ClInclude>
+    <ClInclude Include="gBufferMesh.h">
+      <Filter>mesh wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="GBuffer.h">
+      <Filter>technicas</Filter>
+    </ClInclude>
+    <ClInclude Include="compressor.h">
+      <Filter>heads</Filter>
+    </ClInclude>
+    <ClInclude Include="OptixBlocker.h">
+      <Filter>Optix</Filter>
+    </ClInclude>
+    <ClInclude Include="propmanager.h">
+      <Filter>heads</Filter>
+    </ClInclude>
+    <ClInclude Include="blocker.h">
+      <Filter>heads</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\manySimpleObj.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\manySimpleObj.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\modelBox.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\modelBox.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\orthogonal.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\orthogonal.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\texLight.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\texLight.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\voxelizer.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\voxelizer.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\light.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\light.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\drawLine.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\drawLine.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="sponza.prop">
+      <Filter>settings</Filter>
+    </None>
+    <None Include="garden.prop">
+      <Filter>settings</Filter>
+    </None>
+    <None Include="trees.prop">
+      <Filter>settings</Filter>
+    </None>
+    <None Include="dragon.prop">
+      <Filter>settings</Filter>
+    </None>
+    <None Include="shaders\gbuffers.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\gbuffers.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\debug.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\debug.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\renderWithShadow.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\renderWithShadow.vs">
+      <Filter>shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{7fc8ef51-5b94-4707-92a3-d32d078bebff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="heads">
+      <UniqueIdentifier>{46bf8dab-2019-4800-a01f-fb803e866959}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mesh wrappers">
+      <UniqueIdentifier>{cdbd273d-d24c-45f6-a48e-1da82423ca83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="settings">
+      <UniqueIdentifier>{e8564edf-e8c1-4de0-be1c-8dfc70a04dec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="孟学长代码">
+      <UniqueIdentifier>{63276574-27c2-495c-83ed-0784073c34cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="technicas">
+      <UniqueIdentifier>{1bdfb5c0-dc52-4a1a-9b6c-e9677cd1f8cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Optix">
+      <UniqueIdentifier>{290b781f-44bf-4185-b6af-af11787a4777}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Optix\cuda files">
+      <UniqueIdentifier>{1bbeb8c6-ca81-4bc0-aa23-364d4243e82c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

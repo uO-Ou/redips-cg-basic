@@ -1,7 +1,5 @@
 /FreeImage
-*.sdf
 *.sln
 *.suo
 *.pdb
-*.vcxproj
 *.user

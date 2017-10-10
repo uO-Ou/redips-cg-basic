@@ -11,7 +11,8 @@ namespace redips{
 
 			focalLength = 35.0f;
 			filmSize = float2{ 20.955f, 11.3284f };
-			hAov = ANGLE(atan(filmSize.width()*0.5f / focalLength)) * 2;
+			vAov = ANGLE(atan(filmSize.height()*0.5f / focalLength)) * 2;
+
 			resolution = int2(int(filmSize.width())*25.6, int(filmSize.height())*25.6);
 			imageAspectRatio = filmAspectRatio = filmSize.width() / filmSize.height();
 
@@ -22,12 +23,16 @@ namespace redips{
 			type = _phc_;
 			reset();
 		};
-		PHC(float hAov, float aspect/*width/height*/, float nearp, float farp, std::string label = "") :nearp(-nearp), farp(-farp), hAov(hAov), name(label){
+		PHC(float vAov, float aspect/*width/height*/, float nearp, float farp, std::string label = "") :nearp(-nearp), farp(-farp), vAov(vAov), name(label){
 			resolution = int2((int)(576 * aspect), 576);
 			imageAspectRatio = filmAspectRatio = aspect;
 
+			/**************************************************
 			canvaSize.x = fabs(tan(RAD(hAov*0.5f)) * nearp * 2);
 			canvaSize.y = canvaSize.x / aspect;
+			**************************************************/
+			canvaSize.y = fabs(tan(RAD(vAov*0.5f)) * nearp * 2);
+			canvaSize.x = canvaSize.y * aspect;
 
 			filmSize = canvaSize; //unknown,set to canvaSize
 			focalLength = fabs(nearp); //unknown,set to nearp
@@ -41,7 +46,7 @@ namespace redips{
 
 			canvaSize.x = fabs(filmSize.x * nearp / focalLength);
 			canvaSize.y = fabs(filmSize.y * nearp / focalLength);
-			hAov = ANGLE(atan(filmSize.width()*0.5f / focalLength)) * 2;
+			vAov = ANGLE(atan(filmSize.height()*0.5f / focalLength)) * 2;
 			updateIntrinsic();
 			type = _phc_;
 			reset();
@@ -92,8 +97,8 @@ namespace redips{
 		}
 		//gen rays in world space
 		Ray getRay(float u, float v) {
-			float x = ((u+0.5f) / resolution.x - 0.5) * canvaSize.x;
-			float y = ((v+0.5f) / resolution.y - 0.5) * canvaSize.y;
+			float x = ((u+0.5f) / resolution.x - 0.5f) * canvaSize.x;
+			float y = ((v+0.5f) / resolution.y - 0.5f) * canvaSize.y;
 			float3 direction = camera2world3 * float3(x, y, nearp);
 			return Ray(cameraO + direction, direction);
 		}
@@ -152,7 +157,7 @@ namespace redips{
 			os << "\t camera-X : (" << phc.cameraX.x << "," << phc.cameraX.y << "," << phc.cameraX.z << ")" << endl;
 			os << "\t camera-Y : (" << phc.cameraY.x << "," << phc.cameraY.y << "," << phc.cameraY.z << ")" << endl;
 			os << "\t camera-Z : (" << phc.cameraZ.x << "," << phc.cameraZ.y << "," << phc.cameraZ.z << ")" << endl;
-			os << "\t horizonal-field-of-view : " << phc.hAov << endl;
+			os << "\t vertical-field-of-view : " << phc.vAov << "[" << RAD(phc.vAov) << "]" << endl;
 			os << "\t focal-length : " << phc.focalLength << endl;
 			os << "\t neap - farp : " << phc.nearp << "," << phc.farp << endl;
 			os << "\t film size " << phc.filmSize.width() << "," << phc.filmSize.height() << "(aspect-ratio:" << phc.filmAspectRatio << ")" << endl;
@@ -235,7 +240,8 @@ namespace redips{
 		//in world coordinates;
 		float3 cameraX, cameraY, cameraZ, cameraO;
 	private:
-		float hAov;
+		//float hAov;   //deprecated, horizontal angle of view 
+		float vAov;    //vertical angle of view
 		float filmAspectRatio;
 		float imageAspectRatio;
 
@@ -254,14 +260,14 @@ namespace redips{
 
 		void setFocalLength(float len){
 			focalLength = len;
-			hAov = ANGLE(atan(filmSize.x*0.5f / focalLength)) * 2;
+			vAov = ANGLE(atan(filmSize.y*0.5f / focalLength)) * 2;
 			canvaSize.x = fabs(filmSize.x * nearp / focalLength);
 			canvaSize.y = fabs(filmSize.y * nearp / focalLength);
 			updateIntrinsic();
 		}
-		void setHAov(float angle/*rad*/){
-			hAov = ANGLE(angle);
-			focalLength = filmSize.width()*0.5f / tan(angle*0.5f);
+		void setVAov(float angle/*rad*/){
+			vAov = ANGLE(angle);
+			focalLength = filmSize.height()*0.5f / tan(angle*0.5f);
 			canvaSize.x = fabs(filmSize.x * nearp / focalLength);
 			canvaSize.y = fabs(filmSize.y * nearp / focalLength);
 			updateIntrinsic();

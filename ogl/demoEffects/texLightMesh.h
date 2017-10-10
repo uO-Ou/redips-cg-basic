@@ -2,15 +2,15 @@
 #include <ogl/glMeshWrapper.h>
 class TexLightMesh : public glMeshWrapper{
 public:
-	TexLightMesh(const Triangles* model, bool setup_type = true) : glMeshWrapper(model, setup_type){
+	TexLightMesh(const Triangles* model, unsigned int setup_type = 1u) : glMeshWrapper(model, setup_type & 2u, setup_type & 1u){
 		bindVaoAttribData(0,1,2);
 	};
 	TexLightMesh(const glMeshWrapper& another) : glMeshWrapper(another){
 		bindVaoAttribData(0, 1, 2);
 	}
 	void draw(Shader& shader){
-		int stype = 0;
 		for (int i = 0; i < meshCnt; i++){
+			int stype = 0;
 			if (meshMtls[i]->texture_ka != NULL && meshFaceTypes[i] == _withtex_){
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, mtlTextureHandle[meshMtls[i]->texture_ka]);

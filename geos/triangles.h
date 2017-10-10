@@ -12,13 +12,13 @@
 #include "model.h"
 
 namespace redips{
-	enum GROUP_FACE_TYPE{ _unknown_, _single_, _withnormal_, _withtex_, _other_ };
+	enum GROUP_FACE_TYPE{ _unknown_face_type_, _single_, _withnormal_, _withtex_, _other_ };
 
 	class FGroup{   //face group
 	public:
 		FGroup(std::string name, int fsid, int mtlId) : name(name), fsid(fsid), mtlId(mtlId){
 			faceCnt = tsid = nsid = 0;
-			faceType = _unknown_;
+			faceType = _unknown_face_type_;
 			hasNormals = hasTexture = false;
 		}
 		~FGroup(){};
@@ -89,7 +89,7 @@ namespace redips{
 					fin >> str1 >> str2 >> str3;
 					faceGroupId.push_back(curGid);
 
-					if (groups[curGid].faceType == _unknown_){
+					if (groups[curGid].faceType == _unknown_face_type_){
 						if (str1.find("//") != std::string::npos) groups[curGid].setType(_withnormal_);
 						else if (str1.find("/") != std::string::npos) groups[curGid].setType(_withtex_);
 						else groups[curGid].setType(_single_);

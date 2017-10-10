@@ -1,0 +1,38 @@
+name=sponza
+//compare = 0, look = 1
+operation=compare
+#optix our
+algorithm=our
+
+camera_type=auto
+
+voxelization_frags_resolution=9
+voxelization_resolution=7
+#true false
+box_type=true
+#on off
+mdvoxelization=on
+#true false
+mdv_save_result=false
+
+//0,choose column&gen index ; 1,gen index;
+//>=0,use compressed result,<0 dont use
+compress_option=-1
+
+draw_chassis=false
+model_path=E:/Documents/models/Sponza/sponza.obj
+sphere_path=E:/Documents/models/spheres/Sphere0.obj
+
+frame_range=[0,0]
+movingphc_path=E:/Documents/models/Sponza/cls/CameraControlFile.txt
+phc_intrinsic=[90.0,1.0,0.1,1000000]
+phc_extrinsic=[0,-11.6513,19.2842,0,-12.957,0,0,0.9977,-0.0676]
+
+static_lights=E:/Documents/models/Sponza/cls/lights_sponza_0.txt
+
+voxelization_result_dir=E:/Documents/papers/ppp/ppp/result/sponza
+meng_result=D:/孟学长程序-用完即删/AnalyseData/sponza/ourresult0
+rt_result=D:/孟学长程序-用完即删/AnalyseData/sponza/rtresult0
+mine_result=E:/Documents/papers/ppp/ppp/result/sponza/viser.txt
+
+

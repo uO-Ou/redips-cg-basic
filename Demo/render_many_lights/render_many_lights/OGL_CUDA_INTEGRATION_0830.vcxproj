@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{36DB9B52-F1F8-4535-A342-D0FD4EAE247A}</ProjectGuid>
+    <RootNamespace>OGL_CUDA_INTEGRATION_0830</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>E:\Documents\CG\CGLib\redips;E:\Documents\CG\CGLib\FreeImage\FreeImage\Source;E:\Documents\Opencv\opencv\build\include;E:\Documents\CG\CGLib\gllibs\glfw-3.0.4\include;E:\Documents\CG\CGLib\gllibs\glew-2.1.0-win32\glew-2.1.0\include;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v8.0\common\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\Documents\CG\CGLib\FreeImage\win32;E:\Documents\Opencv\opencv\build\lib\Debug;E:\Documents\CG\CGLib\gllibs\glfw-3.0.4\lib;E:\Documents\CG\CGLib\gllibs\glew-2.1.0-win32\glew-2.1.0\lib\Win32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>E:\Documents\CG\CGLib\redips;E:\Documents\CG\CGLib\FreeImage\FreeImage\Source;E:\Documents\Opencv\opencv\build\include;E:\Documents\CG\CGLib\gllibs\glfw-3.2.1.bin.WIN64\include;E:\Documents\CG\CGLib\gllibs\glew-2.1.0-win32\glew-2.1.0\include;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v8.0\common\inc;D:\孟学长程序-用完即删;E:\Documents\CG\CGLib\gllibs\glm-0.9.5.4;C:\Program Files (x86)\NVIDIA Corporation\Cg\include;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\Documents\CG\CGLib\FreeImage\x64;E:\Documents\Opencv\opencv\build_64\lib\Debug;E:\Documents\CG\CGLib\gllibs\glfw-3.2.1.bin.WIN64\lib-vc2013;E:\Documents\CG\CGLib\gllibs\glew-2.1.0-win32\glew-2.1.0\lib\x64;E:\Documents\opengl\LIB;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>E:\Documents\CG\CGLib\redips;E:\Documents\CG\CGLib\FreeImage\FreeImage\Source;E:\Documents\Opencv\opencv\build\include;E:\Documents\CG\CGLib\gllibs\glfw-3.2.1.bin.WIN64\include;E:\Documents\CG\CGLib\gllibs\glew-2.1.0-win32\glew-2.1.0\include;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v8.0\common\inc;D:\孟学长程序-用完即删;E:\Documents\CG\CGLib\gllibs\glm-0.9.5.4;C:\Program Files (x86)\NVIDIA Corporation\Cg\include;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\Documents\CG\CGLib\FreeImage\x64;E:\Documents\Opencv\opencv\build_64\lib\Release;E:\Documents\CG\CGLib\gllibs\glfw-3.2.1.bin.WIN64\lib-vc2013;E:\Documents\CG\CGLib\gllibs\glew-2.1.0-win32\glew-2.1.0\lib\x64;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>E:\Documents\CG\CGLib\redips;E:\Documents\CG\CGLib\FreeImage\FreeImage\Source;E:\Documents\Opencv\opencv\build\include;E:\Documents\CG\CGLib\gllibs\glfw-3.0.4\include;E:\Documents\CG\CGLib\gllibs\glew-2.1.0-win32\glew-2.1.0\include;C:\ProgramData\NVIDIA Corporation\CUDA Samples\v8.0\common\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\Documents\CG\CGLib\FreeImage\win32;E:\Documents\Opencv\opencv\build\lib\Release;E:\Documents\CG\CGLib\gllibs\glfw-3.0.4\lib;E:\Documents\CG\CGLib\gllibs\glew-2.1.0-win32\glew-2.1.0\lib\Win32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;FreeImaged.lib;opencv_core320d.lib;opencv_highgui320d.lib;opencv_imgcodecs320d.lib;opencv_imgproc320d.lib;opencv_video320d.lib;opencv_videoio320d.lib;glew32.lib;opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+    <CudaCompile>
+      <CodeGeneration>compute_61,sm_61</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;FreeImaged.lib;opencv_core320d.lib;opencv_highgui320d.lib;opencv_imgcodecs320d.lib;opencv_imgproc320d.lib;opencv_video320d.lib;opencv_videoio320d.lib;glew32.lib;opengl32.lib;glfw3.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;FreeImage.lib;opencv_core320.lib;opencv_highgui320.lib;opencv_imgcodecs320.lib;opencv_imgproc320.lib;opencv_video320.lib;opencv_videoio320.lib;glew32.lib;opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;E:\OptixInstallDir\SDK\isgShadows\..\nvcommon\nvModel\include;E:\OptixInstallDir\SDK\isgShadows\..\nvcommon\include;E:\OptixInstallDir\build;E:\OptixInstallDir\include\optixu;E:\OptixInstallDir\SDK\sutil;E:\OptixInstallDir\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;FreeImage.lib;opencv_core320.lib;opencv_highgui320.lib;opencv_imgcodecs320.lib;opencv_imgproc320.lib;opencv_video320.lib;opencv_videoio320.lib;glew32.lib;opengl32.lib;glfw3.lib;E:\OptixInstallDir\build\lib\Release\sutil.lib;E:\OptixInstallDir\build\lib\Release\nvModel.lib;E:\OptixInstallDir\build\lib\Release\nvCommon.lib;E:\OptixInstallDir\lib64\optix.1.lib;E:\OptixInstallDir\lib64\optixu.1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <Include>
+      </Include>
+      <CodeGeneration>compute_61,sm_61</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CudaCompile Include="mesh.cu">
+      <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">./ptx/%(Filename).ptx</CompileOut>
+      <NvccCompilation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ptx</NvccCompilation>
+    </CudaCompile>
+    <CudaCompile Include="ray.cu">
+      <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">./ptx/%(Filename).ptx</CompileOut>
+      <NvccCompilation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ptx</NvccCompilation>
+    </CudaCompile>
+    <CudaCompile Include="blocker.cu" />
+    <CudaCompile Include="voxelizer.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="FrameTimer.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="garden.prop" />
+    <None Include="shaders\debug.fs" />
+    <None Include="shaders\debug.vs" />
+    <None Include="shaders\drawLine.fs" />
+    <None Include="shaders\drawLine.vs" />
+    <None Include="shaders\gbuffers.fs" />
+    <None Include="shaders\gbuffers.vs" />
+    <None Include="shaders\light.fs" />
+    <None Include="shaders\light.vs" />
+    <None Include="shaders\manySimpleObj.fs" />
+    <None Include="shaders\manySimpleObj.vs" />
+    <None Include="shaders\modelBox.fs" />
+    <None Include="shaders\modelBox.vs" />
+    <None Include="shaders\orthogonal.fs" />
+    <None Include="shaders\orthogonal.vs" />
+    <None Include="shaders\renderWithShadow.fs" />
+    <None Include="shaders\renderWithShadow.vs" />
+    <None Include="shaders\texLight.fs" />
+    <None Include="shaders\texLight.vs" />
+    <None Include="shaders\voxelizer.fs" />
+    <None Include="shaders\voxelizer.vs" />
+    <None Include="sponza.prop" />
+    <None Include="dragon.prop" />
+    <None Include="trees.prop" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="blocker.h" />
+    <ClInclude Include="compressor.h" />
+    <ClInclude Include="FrameTimer.h" />
+    <ClInclude Include="GBuffer.h" />
+    <ClInclude Include="gBufferMesh.h" />
+    <ClInclude Include="ManySimpleObj.h" />
+    <ClInclude Include="modelBoxMesh.h" />
+    <ClInclude Include="autophc.h" />
+    <ClInclude Include="OptixBlocker.h" />
+    <ClInclude Include="propmanager.h" />
+    <ClInclude Include="voxelizer.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.targets" />
+  </ImportGroup>
+</Project>
