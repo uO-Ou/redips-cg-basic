@@ -1,0 +1,18 @@
+X64 release
+
+#include 
+E:\Documents\CG\CGLib\redips
+E:\Documents\CG\CGLib\redips\Dependencies\GLEW_GLFW_X64\include
+
+#libs
+E:\Documents\CG\CGLib\redips\Dependencies\FreeImage\x64
+E:\Documents\CG\CGLib\redips\Dependencies\GLEW_GLFW_X64\libs\glew_x64
+E:\Documents\CG\CGLib\redips\Dependencies\GLEW_GLFW_X64\libs\glfw_64_lib-vc2013
+
+FreeImage.lib
+glew32.lib
+opengl32.lib
+glfw3.lib
+
+#dlls
+path=E:\Documents\CG\CGLib\redips\Dependencies\FreeImage\x64;E:\Documents\CG\CGLib\redips\Dependencies\GLEW_GLFW_X64\bin\x64;E:\Documents\CG\CGLib\redips\Dependencies\GLEW_GLFW_X64\libs\glfw_64_lib-vc2013
