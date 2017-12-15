@@ -16,7 +16,7 @@ uniform sampler2D diffuseTexture;
 uniform sampler2D ambientTexture;
 
 void main(){
-   // Diffuse 
+    // Diffuse 
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
@@ -34,14 +34,11 @@ void main(){
     specular *= attenuation; 
 
     vec3 ambient;
-    if((surfaceType&1u)>0) ambient = (texture(ambientTexture,TexCoord).rgb * ambientColor);
+    if((surfaceType&1u)>0) ambient = (texture(ambientTexture,TexCoord).bgr * ambientColor);
     else ambient = ambientColor;
 
-    if((surfaceType&2u)>0) diffuse *=  (texture(diffuseTexture,TexCoord).rgb * diffuseColor);
+    if((surfaceType&2u)>0) diffuse *=  (texture(diffuseTexture,TexCoord).bgr * diffuseColor);
     else diffuse *= diffuseColor;
 
-	color = vec4(ambient + diffuse+specular,1.0f);
-    //if(surfaceType==0) color = vec4(0,1,0,1);
-    //else color = vec4(0,0,1,1);
-    //color = vec4((surfaceType&1u)<=0,(surfaceType&2u)<=0,0.0f,1.0f);
+	color = vec4(ambient+diffuse+specular,1.0f);
 } 

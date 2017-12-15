@@ -7,14 +7,15 @@
 #include <openglWrappers/glMeshWrapper.h>
 class TexLightMesh : public redips::glMeshWrapper{
 public:
-	TexLightMesh(const redips::Triangles* model, redips::ShaderSource shaderSource = redips::ShaderSource(), unsigned int option = 1u)
-	    : glMeshWrapper(model, shaderSource, option){
+	TexLightMesh(const redips::Triangles* model, redips::ShaderSource shaderSource = redips::ShaderSource())
+	    : glMeshWrapper(model, shaderSource){
 		bindVaoAttribData(0, 1, 2);
 	};
 	TexLightMesh(const glMeshWrapper& another, redips::ShaderSource shaderSource = redips::ShaderSource()) : glMeshWrapper(another, shaderSource){
 		bindVaoAttribData(0, 1, 2);
 	}
 	void draw(){
+		if (!m_shader) { std::cerr << "shader error" << std::endl; return; };
 		m_shader->Use();
 		for (int i = 0; i < meshCnt; i++){
 			int stype = 0;

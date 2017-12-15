@@ -77,7 +77,7 @@ namespace redips{
 	
 			return texId;
 		}
-		GLuint create2d(const FImage* fimage,bool genMipmap=true){
+		GLuint create2d(const FImage* fimage,bool genMipmap){
 			switch (fimage->bpp){
 			        case 24: {
 						 this->InternalFormat = GL_RGBA32F;
@@ -91,8 +91,14 @@ namespace redips{
 						 this->Type = GL_UNSIGNED_BYTE;
 						 break;
 			        }
+					case 8:{
+					     this->InternalFormat = GL_R32F;
+						 this->Format = GL_R;
+						 this->Type = GL_UNSIGNED_BYTE;
+						 break;
+					}
 			        default:{
-						printf("[glTexture] : unsupported image file\n");
+						printf("[glTexture] : unsupported image file,bpp is %d\n",fimage->bpp);
 						return 0;
 			       }
 			}

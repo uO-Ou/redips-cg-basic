@@ -12,6 +12,8 @@
 #include <iostream>
 #include "../Common/vec.h"
 #include "../Common/FImage.h"
+#include "../Common/utils.h"
+
 namespace redips{
 	class Material{
 	public:
@@ -86,7 +88,7 @@ namespace redips{
 			std::cout << "[mtl loader] : loading mtllib [" << file << "]\t...\n";
 			while (fin >> buff){
 				if (buff == "newmtl"){
-					fin >> buff;
+					buff = StringUtil::Instance().read(fin).trim();
 					mtl_name_id_mapper[file + std::string("-") + buff] = mtls.size();
 					mtls.push_back(new Material(buff));
 				}
@@ -106,7 +108,7 @@ namespace redips{
 					fin >> fptr->x >> fptr->y >> fptr->z;
 				}
 				else if (buff == "map_Ka"){
-					fin >> buff; 
+					buff = StringUtil::Instance().read(fin).trim();
 					if (buff[1] != ':'){     //not a absolute path
 						buff = basepath + buff;
 					}
@@ -124,7 +126,7 @@ namespace redips{
 					}
 				}
 				else if (buff == "map_Kd"){
-					fin >> buff;
+					buff = StringUtil::Instance().read(fin).trim();
 					if (buff[1] != ':'){     //not a absolute path
 						buff = basepath + buff;
 					}

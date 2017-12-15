@@ -22,7 +22,7 @@ namespace redips{
 		bool firstMouse = true;
 		bool enableMouse = true;
 		float xangle = 0, yangle = 0;  // for camera's Euler angles
-		double lastX = 256, lastY = 256, mouSensitivity = 0.2, scrollSensitivity = 0.1f;
+		double lastX = 256, lastY = 256, mouSensitivity = 0.02, scrollSensitivity = 0.1f, keyboardSensitivity =0.05f;
 
 		//a camera binded to current window
 		Camera *bindedCamera = nullptr;
@@ -55,12 +55,12 @@ namespace redips{
 					if (bindedCamera){
 						if (bindedCamera->type == CAMERA_TYPE::_phc_){
 							redips::PhC* cam = ((redips::PhC*)bindedCamera);
-							if (keys[GLFW_KEY_A]) cam->translate(cam->cameraX*-0.2f); 
-							if (keys[GLFW_KEY_D]) cam->translate(cam->cameraX*0.2f);
-							if (keys[GLFW_KEY_H]) cam->translate(cam->cameraY*-0.2f);
-							if (keys[GLFW_KEY_Y]) cam->translate(cam->cameraY*0.2f);
-							if (keys[GLFW_KEY_W]) cam->translate(cam->cameraZ*-0.2f);
-							if (keys[GLFW_KEY_S]) cam->translate(cam->cameraZ*0.2f);
+							if (keys[GLFW_KEY_A]) cam->translate(cam->cameraX*-keyboardSensitivity);
+							if (keys[GLFW_KEY_D]) cam->translate(cam->cameraX*keyboardSensitivity);
+							if (keys[GLFW_KEY_H]) cam->translate(cam->cameraY*-keyboardSensitivity);
+							if (keys[GLFW_KEY_Y]) cam->translate(cam->cameraY*keyboardSensitivity);
+							if (keys[GLFW_KEY_W]) cam->translate(cam->cameraZ*-keyboardSensitivity);
+							if (keys[GLFW_KEY_S]) cam->translate(cam->cameraZ*keyboardSensitivity);
 						}
 					}
 
@@ -120,6 +120,7 @@ namespace redips{
 				// Define the viewport dimensions
 				glViewport(0, 0, win_width, win_height);
 				glEnable(GL_DEPTH_TEST);
+				glClearColor(0.93f, 0.83f, 0.51f, 1.0f);
 			};
 
 			//key callback

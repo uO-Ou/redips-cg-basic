@@ -1,6 +1,6 @@
 /*
 * Author : redips redips.xin@gmail.com
-* Date : 2017.12.9
+* Date : 2017.12.15
 * Description : three shader-related-class
 		a. ShaderSource => tell a Shader from file or from an exists ShaderProgram
 		b. Shader => create a Shader from file or an exists ShaderProgram
@@ -9,12 +9,9 @@
 #pragma once
 #include <io.h>
 #include <map>
-#include <string>
 #include <vector>
-#include <fstream>
-#include <sstream>
-#include <iostream>
 #include <GL/glew.h>
+#include "../Common/utils.h"
 namespace redips{
 	class ShaderSource{
         #define _vertex_shader_file_suffix_ ".vs"
@@ -40,13 +37,13 @@ namespace redips{
 			}
 			else sourceType = SourceType::_null_;
 		}
-		const char* vertexShaderPath() const {
+		std::string vertexShaderPath() const {
 			if (sourceType != SourceType::_from_file_) return nullptr;
-			return (std::string(value.path) + _vertex_shader_file_suffix_).c_str();
+			return std::string(value.path) + _vertex_shader_file_suffix_;
 		}
-		const char* fragmentShaderPath() const {
+		std::string fragmentShaderPath() const {
 			if (sourceType != SourceType::_from_file_) return nullptr;
-			return (std::string(value.path) + _fragment_shader_file_suffix_).c_str();
+			return std::string(value.path) + _fragment_shader_file_suffix_;
 		}
 	};
 
@@ -57,35 +54,15 @@ namespace redips{
 		Shader(const Shader& another) { Program = another.Program; };
 		// Constructor generates the shader on the fly
 		Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
-			// 1. Retrieve the vertex/fragment source code from filePath
-			std::string vertexCode;
-			std::string fragmentCode;
-			std::ifstream vShaderFile;
-			std::ifstream fShaderFile;
-			// ensures ifstream objects can throw exceptions:
-			vShaderFile.exceptions(std::ifstream::badbit);
-			fShaderFile.exceptions(std::ifstream::badbit);
-			try {
-				// Open files
-				vShaderFile.open(vertexPath);
-				fShaderFile.open(fragmentPath);
-				std::stringstream vShaderStream, fShaderStream;
-				// Read file's buffer contents into streams
-				vShaderStream << vShaderFile.rdbuf();
-				fShaderStream << fShaderFile.rdbuf();
-				// close file handlers
-				vShaderFile.close();
-				fShaderFile.close();
-				// Convert stream into string
-				vertexCode = vShaderStream.str();
-				fragmentCode = fShaderStream.str();
+			//read code from file
+			std::string vertex_code(StringUtil::Instance().file2string(vertexPath));
+			std::string fragment_code(StringUtil::Instance().file2string(fragmentPath));
+			if (vertex_code.length() + fragment_code.length()<=0){
+				std::string shaderName(vertexPath);
+				std::cerr << "[Shader] : load shader file [" << shaderName.substr(0,shaderName.length()-3)<<"] failed\n";
 			}
-			catch (std::ifstream::failure e) {
-				std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
-				exit(0);
-			}
-			const GLchar* vShaderCode = vertexCode.c_str();
-			const GLchar * fShaderCode = fragmentCode.c_str();
+			const GLchar* vShaderCode = vertex_code.c_str();
+			const GLchar * fShaderCode = fragment_code.c_str();
 			// 2. Compile shaders
 			GLuint vertex, fragment;
 			GLint success;
@@ -98,7 +75,7 @@ namespace redips{
 			glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
 			if (!success) {
 				glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-				std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+				std::cout << "[" << std::string(vertexPath) << "] -> ERROR::SHADER::VERTEX::COMPILATION_FAILED" << infoLog << std::endl;
 				exit(0);
 			}
 			// Fragment Shader
@@ -107,11 +84,10 @@ namespace redips{
 			glCompileShader(fragment);
 			// Print compile errors if any
 			glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
-			if (!success)
-			{
+			if (!success) {
 				glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-				std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-				exit(0);
+				std::cout << "[" << std::string(fragmentPath) << "] -> ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+				return;
 			}
 			// Shader Program
 			this->Program = glCreateProgram();
@@ -120,11 +96,10 @@ namespace redips{
 			glLinkProgram(this->Program);
 			// Print linking errors if any
 			glGetProgramiv(this->Program, GL_LINK_STATUS, &success);
-			if (!success)
-			{
+			if (!success) {
 				glGetProgramInfoLog(this->Program, 512, NULL, infoLog);
 				std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-				exit(0);
+				return;
 			}
 			// Delete the shaders as they're linked into our program now and no longer necessery
 			glDeleteShader(vertex);
@@ -134,9 +109,7 @@ namespace redips{
 		GLuint Program;
 		// Uses the current shader
 		void Use() {
-			if (Program == 0){
-				std::cerr << "[Shader] : warning!, shader program == 0" << std::endl;; return;
-			}
+			if (Program == 0){ std::cerr << "[Shader] : warning!, shader program == 0" << std::endl;; return; }
 			glUseProgram(this->Program);
 		}
 		bool operator== (const Shader& another) const { return this->Program == another.Program; }

@@ -1,12 +1,13 @@
 /*
 * Author : redips redips.xin@gmail.com
-* Date : 2017.12.9
+* Date : 2017.12.10
 * Description : obj-mesh loader
 		a. each mesh has a default-material. call .setDefaultMaterial(your-material) to change default-material.
         b. can only process : v、vt、vn、f、mtllib、usemtl、g
         c. several limits:
 			c.1. vt is 3-dimention
 			c.2. f can only has 3 format : withtex(a/b/c) withnormal(a//c) single(a)   
+		bug: f 8427//8428 8664//8665 8441//8442 8428//8429 
 */
 #pragma once
 #include "model.h"

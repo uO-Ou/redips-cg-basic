@@ -1,8 +1,10 @@
 /*
 * Author : redips redips.xin@gmail.com
-* Date : 2017.12.9
+* Date : 2017.12.15
 * Description : opengl mesh wrapper
-		a. if option& 1 == 1, setup per mtl, else per group; if option & 2 == 1, generate geometry normal, else use normal from obj file
+		a. if option& 1 == 1, setup per mtl, else per group; 
+		   if option & 2 == 1, generate geometry normal, else use normal from obj file
+		   if option & 4 == 1, generate mipmap texture
 		b. when delete a glMeshWrapper, release vbo/textures if only its' visitorCnt<=0 
 */
 #pragma once
@@ -12,8 +14,20 @@
 
 namespace redips{
 	class glMeshWrapper{
+	public:
+		class WrapOption{ 
+		public:
+			static const unsigned int _default_ = 1u;
+			static const unsigned int _geNormal_ = 2u;
+			static const unsigned int _genMipmap_ = 4u;
+			WrapOption(){ value = _default_; }
+			WrapOption(unsigned int value) :value(value){};
+		private:
+			unsigned int value;
+			operator unsigned int(){ return value; };
+		};
 	protected:
-		glMeshWrapper(const Triangles* model,ShaderSource& shaderSource,unsigned int option){
+		glMeshWrapper(const Triangles* model, ShaderSource& shaderSource, unsigned int option = WrapOption::_default_ | WrapOption::_genMipmap_){
 			this->origion = this;
 			this->visitorCnt = 1;
 			useShader(shaderSource);
@@ -22,8 +36,9 @@ namespace redips{
 			this->mesh = model->mesh_ptr();
 			meshFaceCnt.resize(mesh->groups.size());
 			meshFaceTypes.resize(mesh->groups.size());
-			setup_type = option & 1u;
-			bool genGeoNormal = (option & 2u)>0;
+			setup_type = option & WrapOption::_default_;
+			bool genGeoNormal = (option & WrapOption::_geNormal_);
+			bool genMipmapTexture = (option & WrapOption::_genMipmap_);
 
 			// check if groups with same mtl have same face-type
 			if (setup_type){
@@ -84,7 +99,7 @@ namespace redips{
 				textures = new glTexture[textureCnt];
 				int texId = 0;
 				for (auto iter = mesh->mtllib.loadedImage.begin(); iter != mesh->mtllib.loadedImage.end(); iter++){
-					textures[texId].create2d(iter->second);
+					textures[texId].create2d(iter->second, genMipmapTexture);
 					mtlTextureHandle[iter->second] = textures[texId++].texId;
 				}
 			}
@@ -160,7 +175,7 @@ namespace redips{
 		void useShader(const ShaderSource& shaderSource){
 			if (shaderSource.sourceType == ShaderSource::SourceType::_from_file_){
 				if (m_shader) delete m_shader;
-				m_shader = new Shader(shaderSource.vertexShaderPath(), shaderSource.fragmentShaderPath());
+				m_shader = new Shader(shaderSource.vertexShaderPath().c_str(), shaderSource.fragmentShaderPath().c_str());
 			}
 			else if (shaderSource.sourceType == ShaderSource::SourceType::_exists_program_){
 				if (m_shader) delete m_shader;
