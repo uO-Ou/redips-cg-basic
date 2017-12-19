@@ -30,8 +30,8 @@ void main(){
 
 	float distance = length(lightPos - FragPos);
 	float attenuation = 1.0 / (1.0 + 0.0004 * distance + 0.0001 * distance * distance);
-    diffuse *= attenuation;
-    specular *= attenuation; 
+    //diffuse *= attenuation;
+    //specular *= attenuation; 
 
     vec3 ambient;
     if((surfaceType&1u)>0) ambient = (texture(ambientTexture,TexCoord).bgr * ambientColor);

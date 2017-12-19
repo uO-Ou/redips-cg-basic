@@ -184,7 +184,7 @@ namespace redips{
 			vertCnt = mesh->vertices.size();
 			faceCnt = mesh->faces_v.size();
 
-			updateAABB();
+			getRawAABB();
 		}
 		Triangles(){ setup(); }
 		Triangles(const float3 &boxdim,float3 center = float3(0.0f,0.0f,0.0f)){
@@ -211,7 +211,7 @@ namespace redips{
 			delete mesh;
 		};
 
-		bool intersect(const Ray& ray, HitRecord &record){
+		bool intersect(const Ray& ray, HitRecord &record) {
 			if (useTree){
 				rayBoxCnt = 0;
 				return traverse(0, ray, rayBoxCnt, record);
@@ -242,6 +242,7 @@ namespace redips{
 			const std::vector<float3>& vertices = mesh->vertices;
 			const std::vector<int3>& faces_v = mesh->faces_v;
 			for (int i = 0; i < faceCnt; i++){
+				boxes[i].reset();
 				for (int j = 0; j < 3; j++) boxes[i] += (transform*float4(vertices[faces_v[i][j]], 1.0f)).vec3();
 				hooks[i] = std::make_pair(i, &(boxes[i]));
 			}
@@ -250,7 +251,8 @@ namespace redips{
 		const Material& getMaterial(int index/*faceId*/) const{
 			return mesh->getMaterial(index);
 		}
-		float3 diffuseColor(int faceId, float3 pos){
+
+		float2 texcoord(int faceId, float3 pos){
 			const Material& mtl = mesh->getMaterial(faceId);
 			const Mesh::FGroup& groupInfo = (mesh->groups[mesh->faceGroupId[faceId]]);
 			const std::vector<float3>& vertices = mesh->vertices;
@@ -258,18 +260,16 @@ namespace redips{
 			const std::vector<int3>& faces_v = mesh->faces_v;
 			const std::vector<int3>& faces_vt = mesh->faces_vt;
 
-			if ((mtl.texture_kd != NULL) && (groupInfo.hasTexture)){
-				int3 faceIndice = faces_v[faceId];
-				float3 bary = GeoUtil::barycoord((transform*float4(vertices[faceIndice.x], 1.0f)).vec3(), (transform*float4(vertices[faceIndice.y], 1.0f)).vec3(), (transform*float4(vertices[faceIndice.z], 1.0f)).vec3(), pos);
+			int3 faceIndice = faces_v[faceId];
+			float3 bary = GeoUtil::barycoord((transform*float4(vertices[faceIndice.x], 1.0f)).vec3(), (transform*float4(vertices[faceIndice.y], 1.0f)).vec3(), (transform*float4(vertices[faceIndice.z], 1.0f)).vec3(), pos);
 
-				int3 texIndice = faces_vt[faceId - groupInfo.fsid + groupInfo.tsid];
-				float3 texcoord = (texcoords[texIndice.x] * bary.x + texcoords[texIndice.y] * bary.y + texcoords[texIndice.z] * bary.z);
+			int3 texIndice = faces_vt[faceId - groupInfo.fsid + groupInfo.tsid];
+			float3 texcoord = (texcoords[texIndice.x] * bary.x + texcoords[texIndice.y] * bary.y + texcoords[texIndice.z] * bary.z);
 
-				return mtl.tex_diffuse(texcoord.x, texcoord.y);
-			}
-			else {
-				return mtl.diffuse;
-			}
+			texcoord.x -= int(texcoord.x), texcoord.y -= int(texcoord.y);
+			if (texcoord.x < 0) texcoord.x = 1 + texcoord.x;
+			if (texcoord.y < 0) texcoord.y = 1 + texcoord.y;
+			return redips::float2(texcoord.x,texcoord.y);
 		}
 
 		//add a triangle to a new group, need to modify
@@ -293,7 +293,10 @@ namespace redips{
 
 			vertCnt = mesh->vertices.size();
 			faceCnt = mesh->faces_v.size();
-			updateAABB();
+		
+			aabb_raw += a;
+			aabb_raw += b;
+			aabb_raw += c;
 		}
 		const Mesh* mesh_ptr() const { return mesh; };
 	public:
@@ -351,7 +354,7 @@ namespace redips{
 		}
 		
 		//update vertices's aabb
-		void updateAABB(){
+		void getRawAABB(){
 			aabb_raw.reset();
 			const std::vector<float3>& vertices = mesh->vertices;
 			for (int i = 0; i < vertCnt; i++) aabb_raw += vertices[i];

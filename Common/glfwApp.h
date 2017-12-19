@@ -22,7 +22,7 @@ namespace redips{
 		bool firstMouse = true;
 		bool enableMouse = true;
 		float xangle = 0, yangle = 0;  // for camera's Euler angles
-		double lastX = 256, lastY = 256, mouSensitivity = 0.02, scrollSensitivity = 0.1f, keyboardSensitivity =0.05f;
+		double lastX = 256, lastY = 256, mouSensitivity = 0.02, scrollSensitivity = 0.1f, keyboardSensitivity =0.2f;
 
 		//a camera binded to current window
 		Camera *bindedCamera = nullptr;

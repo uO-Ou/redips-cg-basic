@@ -12,9 +12,10 @@ namespace redips{
 	public:
 		Camera(){};
 		~Camera(){};
-		Ray getRay(float u, float v) {};
+		virtual Ray getRay(float u, float v) const = 0;
 	public:
 		CAMERA_TYPE type;
 		std::string name;
+		int2 resolution;
 	};
 };

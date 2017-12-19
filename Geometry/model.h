@@ -20,6 +20,10 @@ namespace redips{
 		virtual ~Model(){};
 	public:
 		const Mat44f& Transform() const{ return transform; }
+		void Transform(const Mat44f& transform){
+			this->transform = transform;
+		}
+		//return bounding box after transformed
 		BOX aabb_T() const{
 			BOX ret;
 			for (int i = 0; i < 8; i++){
@@ -27,23 +31,22 @@ namespace redips{
 			}
 			return ret;
 		}
+		//return bounding box of raw obj-file
 		const BOX& aabb_R() const{
 			return aabb_raw;
 		}
 	public:
 		virtual const Material& getMaterial(int index) const = 0;
-		virtual float3 diffuseColor(int index, float3 pos) = 0;
 		virtual bool intersect(const Ray& ray, HitRecord& record) = 0;
 		virtual void buildTree() = 0;
-		virtual void updateAABB() = 0;
-		
+		virtual void getRawAABB() = 0;
 	protected:
 		Mat44f transform;
 		BOX aabb_raw;
-	public:
-		MODEL_TYPE type;
 		bool useTree;
 		KDTree mtree;
+	public:
+		MODEL_TYPE type;
 	};
 };
 

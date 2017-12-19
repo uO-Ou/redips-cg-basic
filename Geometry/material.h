@@ -3,7 +3,6 @@
 * Date : 2017.12.9
 * Description : Material
 */
-
 #pragma once
 #include <map>
 #include <string>
@@ -28,9 +27,14 @@ namespace redips{
 		};
 
 		float3 tex_diffuse(float u, float v) const{
-			u = CLAMP(u, 0, 0.9999f);
-			v = CLAMP(v, 0, 0.9999f);
+			//u = CLAMP(u, 0, 0.9999f);
+			//v = CLAMP(v, 0, 0.9999f);
 			return texture_kd->tex2d(u, v);
+		}
+		float3 tex_ambient(float u, float v) const{
+			//u = CLAMP(u, 0, 0.9999f);
+			//v = CLAMP(v, 0, 0.9999f);
+			return texture_ka->tex2d(u, v);
 		}
 	public:
 		std::string name;

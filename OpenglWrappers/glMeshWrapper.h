@@ -202,7 +202,7 @@ namespace redips{
 			drawAllMeshes();
 		};
 
-		const Triangles* model_ptr() const { return this->model; }
+		const Triangles* model_ptr()  const{ return this->model; }
 
 		//shader uniforms
 	    void uniformMat44f(const char* name,const float* value){ glUniformMatrix4fv(glGetUniformLocation(m_shader->Program, name), 1, GL_FALSE, value); }

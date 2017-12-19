@@ -105,7 +105,7 @@ namespace redips{
 				  return (camera2world3 * float3(tx, ty, nearp))+cameraO;
 		}
 		//gen rays in world space
-		Ray getRay(float u, float v) {
+		Ray getRay(float u, float v) const{
 			float x = ((u+0.5f) / resolution.x - 0.5f) * canvaSize.x;
 			float y = ((v+0.5f) / resolution.y - 0.5f) * canvaSize.y;
 			float3 direction = camera2world3 * float3(x, y, nearp);
@@ -241,8 +241,6 @@ namespace redips{
 
 		float nearp, farp;
 		float2 canvaSize;
-
-		int2 resolution;
 
 		//in world coordinates;
 		float3 cameraX, cameraY, cameraZ, cameraO;

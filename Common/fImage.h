@@ -31,7 +31,7 @@ namespace redips{
 			BYTE *bits = FreeImage_GetScanLine(dib, tv);
 			if (bpp == 24 || bpp == 32){
 				int step = bpp / 8;
-				return Vec3<float>(bits[tu * step + 0] / 255.0f, bits[tu * step + 1] / 255.0f, bits[tu * step + 2] / 255.0f);
+				return Vec3<float>(bits[tu * step + 2] / 255.0f, bits[tu * step + 1] / 255.0f, bits[tu * step + 0] / 255.0f);
 			}
 			else if (bpp == 8){
 				float tfloat = bits[tu] / 255.0f;

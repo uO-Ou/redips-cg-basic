@@ -1,6 +1,6 @@
 /*
 * Author : redips redips.xin@gmail.com
-* Date : 2017.12.9
+* Date : 2017.12.19
 * Description : kdtree
 */
 #pragma once
@@ -13,6 +13,17 @@
 //bug, what if a node has geometry's count larger than MAX_LEAF_SIZE,but after divide,all its geometry allocate to one child;
 namespace redips{
 	class KDTree{
+	private:
+		//HookCmper is used for compare HOOKs by one dimension
+		class HookCmper{
+		public:
+			explicit HookCmper(BYTE dim):dim(dim){ }
+			bool operator()(const HOOK& a,const HOOK& b){
+				return (a.second->heart())[dim] < (b.second->heart())[dim];
+			}
+		private:
+			BYTE dim;
+		};
 	public:
 		KDTree(){
 			boxes = nullptr;
@@ -23,13 +34,22 @@ namespace redips{
 			boxCnt = 0;
 			MAX_LEAF_SIZE = 16;
 		};
-		~KDTree(){};
+		~KDTree(){
+			delete boxes;
+			delete splitDims;
+			delete splitValues;
+			delete gspos; delete gcnts;
+			delete lchild; delete rchild;
+		};
 
 		void buildTree(std::vector<HOOK>* hooks){
 			hooksPtr = hooks;
-			resize(hooksPtr->size() * 4);
+			hooksCnt = hooks->size();
+			resize(hooksCnt * 4);
 			clock_t start, finish;
 			start = clock();
+			memset(lchild, -1, sizeof(int)*hooksCnt * 4);
+			memset(rchild, -1, sizeof(int)*hooksCnt * 4);
 			build(0, 0, hooksPtr->size());
 			finish = clock();
 			printf("[kd-tree builder] : build finish,%d node,cost %.2lfms\n", boxCnt, (double)(finish - start) / CLOCKS_PER_SEC * 1000);
@@ -38,6 +58,8 @@ namespace redips{
 	private:
 		void build(int id, int spos, int cnt){
 			//printf("building %d : %d-%d\n",id,spos,spos+cnt);
+
+
 			gcnts[id] = cnt;
 			gspos[id] = spos;
 			if (cnt <= MAX_LEAF_SIZE) {
@@ -58,31 +80,7 @@ namespace redips{
 				boxes[id] += boxes[rchild[id]];
 			}
 		}
-		//bug, what if a node has geometry's count larger than MAX_LEAF_SIZE,but after divide,all its geometry allocate to one child;
-		int split_old(int spos, int cnt, float &splitValue, BYTE &splitPanel){
-			float3 mean, square;
-			for (int i = spos; i < spos + cnt; i++){ mean += ((*hooksPtr)[i].second->heart()); }
-			mean *= (1.0f / cnt);
-			for (int i = spos; i < spos + cnt; i++){ square += (((*hooksPtr)[i].second->heart()) - mean).square(); }
-
-			splitPanel = square.maxdim();
-			switch (splitPanel){
-			case 0:
-				std::sort((*hooksPtr).begin() + spos, (*hooksPtr).begin() + spos + cnt, cmpByHookX);
-				splitValue = mean.x;
-				break;
-			case 1:
-				std::sort((*hooksPtr).begin() + spos, (*hooksPtr).begin() + spos + cnt, cmpByHookY);
-				splitValue = mean.y;
-				break;
-			case 2:
-				std::sort((*hooksPtr).begin() + spos, (*hooksPtr).begin() + spos + cnt, cmpByHookZ);
-				splitValue = mean.z;
-				break;
-			}
-			return binarySearch(splitValue, spos, spos + cnt - 1, splitPanel);
-		}
-
+		
 		int split(int spos, int cnt, float &splitValue, BYTE &splitPanel){
 			float3 mean, square;
 			for (int i = spos; i < spos + cnt; i++){ mean += ((*hooksPtr)[i].second->heart()); }
@@ -90,33 +88,15 @@ namespace redips{
 			for (int i = spos; i < spos + cnt; i++){ square += (((*hooksPtr)[i].second->heart()) - mean).square(); }
 
 			splitPanel = square.maxdim();
-			switch (splitPanel){
-			case 0:
-				std::sort((*hooksPtr).begin() + spos, (*hooksPtr).begin() + spos + cnt, cmpByHookX);
-				splitValue = (*((*hooksPtr)[spos + cnt / 2].second)).lbb.x;
-				break;
-			case 1:
-				std::sort((*hooksPtr).begin() + spos, (*hooksPtr).begin() + spos + cnt, cmpByHookY);
-				splitValue = (*((*hooksPtr)[spos + cnt / 2].second)).lbb.y;
-				break;
-			case 2:
-				std::sort((*hooksPtr).begin() + spos, (*hooksPtr).begin() + spos + cnt, cmpByHookZ);
-				splitValue = (*((*hooksPtr)[spos + cnt / 2].second)).lbb.z;
-				break;
-			}
+			//sort by maxdim
+			std::sort((*hooksPtr).begin() + spos, (*hooksPtr).begin() + spos + cnt, HookCmper(splitPanel));
+
+			splitValue = ((*((*hooksPtr)[spos + cnt / 2].second)).lbb)[splitPanel];
+
 			return spos + cnt / 2;
 			//return binarySearch(splitValue, spos, spos + cnt - 1, splitPanel);
 		}
 
-		static bool cmpByHookX(const HOOK &a, const HOOK &b){
-			return a.second->heart().x < b.second->heart().x;
-		}
-		static bool cmpByHookY(const HOOK &a, const HOOK &b){
-			return a.second->heart().y < b.second->heart().y;
-		}
-		static bool cmpByHookZ(const HOOK &a, const HOOK &b){
-			return a.second->heart().z < b.second->heart().z;
-		}
 		int binarySearch(float data, int spos, int epos, BYTE dim){
 			int low = spos, high = epos;
 			while (low <= high){
@@ -134,7 +114,7 @@ namespace redips{
 		// each box is a tree-node;
 		// boxes[0] is root. boxes[i] contains hooks[gspos[i],gspos+gcnts[i])
 		// boxes[i] split to boxes[lchild[i]] and boxes[rchild[i]] based on splitDims[i]'s splitValues[i] when gcnts[i] > MAX_LEAF_SIZE
-		int boxCnt;
+		int boxCnt,hooksCnt;
 		BOX *boxes;
 		BYTE *splitDims;
 		float *splitValues;
@@ -144,10 +124,9 @@ namespace redips{
 		void resize(int n){
 			if (boxes){
 				delete boxes;
-				delete splitDims;
-				delete splitValues;
-				delete gspos; delete gcnts;
-				delete lchild; delete rchild;
+				delete splitDims; delete splitValues;
+				delete gspos;     delete gcnts;
+				delete lchild;      delete rchild;
 			}
 			boxCnt = 0;
 
@@ -156,10 +135,8 @@ namespace redips{
 			boxes = new BOX[n];
 			splitDims = new BYTE[n];
 			splitValues = new float[n];
-			gspos = new int[n];	gcnts = new int[n]; lchild = new int[n];	rchild = new int[n];
-
-			memset(lchild, -1, sizeof(int)*n);
-			memset(rchild, -1, sizeof(int)*n);
+			gspos = new int[n];	gcnts = new int[n]; 
+			lchild = new int[n];	rchild = new int[n];
 		}
 	};
 };
