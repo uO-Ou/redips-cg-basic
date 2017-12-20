@@ -252,7 +252,7 @@ namespace redips{
 			return mesh->getMaterial(index);
 		}
 
-		float2 texcoord(int faceId, float3 pos){
+		float2 texcoord(int faceId, const float3& pos) const{
 			const Material& mtl = mesh->getMaterial(faceId);
 			const Mesh::FGroup& groupInfo = (mesh->groups[mesh->faceGroupId[faceId]]);
 			const std::vector<float3>& vertices = mesh->vertices;

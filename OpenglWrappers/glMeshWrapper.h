@@ -100,7 +100,7 @@ namespace redips{
 				int texId = 0;
 				for (auto iter = mesh->mtllib.loadedImage.begin(); iter != mesh->mtllib.loadedImage.end(); iter++){
 					textures[texId].create2d(iter->second, genMipmapTexture);
-					mtlTextureHandle[iter->second] = textures[texId++].texId;
+					mtlTextureHandle[iter->second] = textures[texId++];
 				}
 			}
 

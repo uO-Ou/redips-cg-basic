@@ -8,11 +8,14 @@ namespace redips{
 	enum class MODEL_TYPE{ _sphere_, _triangle_, _panel_ };
 	enum class CAMERA_TYPE{ _phc_, _glc_, _mpc_ };
 	enum class GROUP_FACE_TYPE{ _unknown_face_type_, _single_, _withnormal_, _withtex_, _other_ };
+	enum class GL_TEXTURE_TYPE { _1d_, _2d_, _3d_, _cubemap_, _unknown_texture_type_ };
 };
 
 #ifndef PI
 #define PI 3.1415926f
 #endif
+
+#define PI_INV 0.31830989f
 
 #define ANGLE_PER_RAD (57.29578f)
 #define RAD_PER_AGNEL (0.0174533f)

@@ -36,7 +36,7 @@ namespace redips{
 			canvaSize.y = fabs(tan(RAD(vAov*0.5f)) * nearp * 2);
 			canvaSize.x = canvaSize.y * aspect;
 
-			filmSize = canvaSize; //unknown,set to canvaSize
+			filmSize = canvaSize;         //unknown,set to canvaSize
 			focalLength = fabs(nearp); //unknown,set to nearp
 			updateIntrinsic();
 			type = CAMERA_TYPE::_phc_;

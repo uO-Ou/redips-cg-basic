@@ -1,6 +1,6 @@
 /*
 * Author : redips redips.xin@gmail.com
-* Date : 2017.12.9
+* Date : 2017.12.20
 * Description : Material
 */
 #pragma once
@@ -23,7 +23,7 @@ namespace redips{
 			transparency = 1.0f;
 			shininess = 0.0f;
 			illum = 1;
-			texture_ka = texture_kd = NULL;
+			texture_ka = texture_kd = nullptr;
 		};
 
 		float3 tex_diffuse(float u, float v) const{
@@ -35,6 +35,14 @@ namespace redips{
 			//u = CLAMP(u, 0, 0.9999f);
 			//v = CLAMP(v, 0, 0.9999f);
 			return texture_ka->tex2d(u, v);
+		}
+		void setTexture_ka(const char* path){
+			delete texture_ka;
+			texture_ka = new FImage(path);
+		}
+		void setTexture_kd(const char* path){
+			delete texture_kd;
+			texture_kd = new FImage(path);
 		}
 	public:
 		std::string name;

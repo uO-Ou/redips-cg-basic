@@ -85,8 +85,9 @@ namespace redips{
 				show_fps = flag;  if (!flag) glfwSetWindowTitle(window,windowTitle);
 			};
 			void acceptMouseControl(bool flag) { enableMouse = flag; };
-			void changeMouSensitivity(float value) { mouSensitivity = value; };
-			void changescrollSensitivity(float value) { scrollSensitivity = value; };
+			void stretchMouSensitivity(float scale) { mouSensitivity *= scale; };
+			void stretchscrollSensitivity(float scale) { scrollSensitivity *= scale; };
+			void stretchKeyboardSensitivity(float scale) { keyboardSensitivity *= scale; };
 			void setWindowTitle(const char* title){ strcpy(windowTitle, title); }
 			bool keydown(int id){ return keys[id]; }
 			void closeWindow(){ glfwSetWindowShouldClose(window, GL_TRUE); }

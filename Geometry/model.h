@@ -1,10 +1,10 @@
 /*
 * Author : redips redips.xin@gmail.com
-* Date : 2017.12.9
+* Date : 2017.12.20
 * Description : model base class
 		a. currently support two kinds of Model : Triangles and Particles
 		b. each Model-derived class should implement several methods:
-			intersect(...) buildTree() updateAABB() getMaterial(...) diffuseColor(...)
+			intersect(...) buildTree() getRawAABB() getMaterial(...) texcoord(...)
 		c. transform-operation should update aabb-box;
 */
 #pragma once
@@ -36,15 +36,21 @@ namespace redips{
 			return aabb_raw;
 		}
 	public:
+		//return a reference to geometry[index]'s material
 		virtual const Material& getMaterial(int index) const = 0;
+		//return texcoord of pos
+		virtual float2 texcoord(int geoId, const float3& pos) const = 0;
+		//check if ray intersects with model
 		virtual bool intersect(const Ray& ray, HitRecord& record) = 0;
+		//build a kdtree to accelerate ray-model intersect operation
 		virtual void buildTree() = 0;
+		//calculate aabb of input file
 		virtual void getRawAABB() = 0;
 	protected:
-		Mat44f transform;
-		BOX aabb_raw;
 		bool useTree;
 		KDTree mtree;
+		BOX aabb_raw;
+		Mat44f transform;
 	public:
 		MODEL_TYPE type;
 	};

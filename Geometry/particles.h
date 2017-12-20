@@ -1,6 +1,6 @@
 /*
 * Author : redips redips.xin@gmail.com
-* Date : 2017.12.9
+* Date : 2017.12.20
 * Description : particles
 */
 #pragma once
@@ -8,22 +8,22 @@
 namespace redips{
 	class Particles : public Model{
 	public:
-		Particles(){
-			radius = 0.1f;
+		Material material;
+		Particles(float radius = 0.1f):radius(radius){
 			material = Material("sphere");
 		};
-		Particles(const char* file){
-			radius = 0.1f;
+		Particles(const char* file, float radius = 0.1f) :radius(radius){
 			load(file);
+			material = Material("sphere");
 		}
 		~Particles(){};
-		void addSphere(float3 pos){
+		void addSphere(const float3& pos){
 			spheres.push_back(pos);
-			updateAABB();
+			aabb_raw += pos;
 		}
 		const float* ptr()const { return &(spheres[0].x); }
 		
-		void updateAABB(){
+		void getRawAABB(){
 			aabb_raw.reset();
 			for (int i = 0; i < spheres.size(); i++) aabb_raw += spheres[i];
 		}
@@ -31,6 +31,18 @@ namespace redips{
 		const Material& getMaterial(int index) const{
 			return material;
 		}
+
+		float2 texcoord(int particleId, const float3& pos) const{
+			redips::float3 ray = (pos - (transform*float4(spheres[particleId], 1.0f)).vec3());
+			float coord_y = acos(ray.unit().dot(redips::float3(0, -1, 0))) * PI_INV;
+
+			ray.y = 0;
+			if (ray.length2() < 1e-6) return redips::float2(0,coord_y);
+			float coord_x = acos(ray.unit().dot(redips::float3(-1, 0, 0))) * PI_INV * 0.5f;
+			if (ray.z < 0) coord_x = 1.0f - coord_x;
+			return redips::float2(coord_x,coord_y);
+		}
+
 		void setMaterial(const Material& mtl) { material = mtl; };
 		
 		void buildTree(){
@@ -51,10 +63,6 @@ namespace redips{
 			if (hitted) record.normal = (ray.ori + ray.dir * record.distance - (transform*float4(spheres[record.hitIndex], 1.0f)).vec3()).unit();
 			return hitted;
 		}
-		float3 diffuseColor(int index, float3 pos){
-			return material.diffuse;
-		}
-
 	public:
 		float radius;
 		std::vector<float3> spheres;
@@ -66,9 +74,9 @@ namespace redips{
 			spheres.resize(scnt);
 			for (int i = 0; i < scnt; i++){ fin >> spheres[i].x >> spheres[i].y >> spheres[i].z; }
 			fin.close();
-			updateAABB();
+			getRawAABB();
 		}
-		Material material;
+		
 	};
 };
 

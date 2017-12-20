@@ -1,21 +1,21 @@
 /*
 * Author : redips redips.xin@gmail.com
-* Date : 2017.12.9
+* Date : 2017.12.20
 * Description : opengl texture wrapper
 */
 #pragma once
 #include <GL/glew.h>
 #include "../Common/FImage.h"
 namespace redips{
-	enum _GL_TEXTURE_TYPE_ {_1d_,_2d_,_3d_,_cubemap_,_unknown_texture_type_};
+	
 	class glTexture{
 	public:
 		int3 dim;
-		GLuint texId;
 		GLint InternalFormat;
 		GLenum Format,Type;
-		_GL_TEXTURE_TYPE_ texture_type;
+		GL_TEXTURE_TYPE texture_type;
 	public:
+		operator GLuint(){	return texId;	}
 		glTexture(){ texId = 0; };
 		~glTexture(){
 			destroy();
@@ -23,6 +23,17 @@ namespace redips{
 		void destroy(){
 			if (texId) glDeleteTextures(1, &texId);
 		}
+
+		void update(const BYTE* imgdata,GLuint level = 0){
+			if (texture_type == GL_TEXTURE_TYPE::_2d_){
+				glBindTexture(GL_TEXTURE_2D,texId);
+				glTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, dim.x, dim.y, Format, Type, imgdata);
+			}
+			else{
+			
+			}
+		}
+
 		GLuint create1d(GLsizei nTextureWidth, GLint nInternalFormat, GLenum nFormat, GLenum nType, const void *gData){
 			if (texId) glDeleteTextures(1, &texId);
 			glGenTextures(1, &texId);
@@ -34,7 +45,7 @@ namespace redips{
 			glTexImage1D(GL_TEXTURE_1D, 0, nInternalFormat, nTextureWidth, 0, nFormat, nType, gData);
 			glBindTexture(GL_TEXTURE_1D, 0);
 
-			this->texture_type = _1d_;
+			this->texture_type = GL_TEXTURE_TYPE::_1d_;
 			this->dim.x = nTextureWidth;
 			this->InternalFormat = nInternalFormat;
 			this->Format = nFormat;
@@ -56,7 +67,7 @@ namespace redips{
 			glTexImage2D(GL_TEXTURE_2D, 0, nInternalFormat, dim.x, dim.y, 0, nFormat, nType, gData);
 			glBindTexture(GL_TEXTURE_2D, 0);
 
-			this->texture_type = _2d_;
+			this->texture_type = GL_TEXTURE_TYPE::_2d_;
 			this->dim.x = dim.x, this->dim.y = dim.y;
 			this->InternalFormat = nInternalFormat;
 			this->Format = nFormat;
@@ -72,7 +83,7 @@ namespace redips{
 			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, nSamples, format, dim.x, dim.y, GL_TRUE);
 			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
-			this->texture_type = _2d_;
+			this->texture_type = GL_TEXTURE_TYPE::_2d_;
 			this->dim.x = dim.x, this->dim.y = dim.y;
 	
 			return texId;
@@ -123,7 +134,7 @@ namespace redips{
 			glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat, fimage->width, fimage->height, 0, Format, Type, fimage->ptr());
 			if(genMipmap) glGenerateMipmap(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, 0);
-			this->texture_type = _2d_;
+			this->texture_type = GL_TEXTURE_TYPE::_2d_;
 			this->dim.x = fimage->width, this->dim.y = fimage->height;
 
 			return texId;
@@ -144,14 +155,14 @@ namespace redips{
 			this->dim = dim;
 			this->Type = type;
 			this->Format = format;
-			this->texture_type = _3d_;
+			this->texture_type = GL_TEXTURE_TYPE::_3d_;
 			this->InternalFormat = internalFormat;
 
 			return texId;
 		}
 
 		void save2disk(const char* file){
-			if (texture_type == _2d_){
+			if (texture_type == GL_TEXTURE_TYPE::_2d_){
 				glBindTexture(GL_TEXTURE_2D, texId);
 				int cpp = 0;
 				switch (Format){
@@ -184,7 +195,7 @@ namespace redips{
 		}
 
 		void* tex2d(int x,int y) const{
-			if (texture_type != _2d_) return nullptr;
+			if (texture_type != GL_TEXTURE_TYPE::_2d_) return nullptr;
 			glBindTexture(GL_TEXTURE_2D, texId);
 			int cpp = 0;
 			switch (Format){
@@ -207,5 +218,7 @@ namespace redips{
 				return nullptr;
 			}
 		}
+	private:
+		GLuint texId;
 	};
 };

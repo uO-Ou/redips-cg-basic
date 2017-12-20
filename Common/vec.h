@@ -19,6 +19,9 @@ namespace redips{
 		T width() const { return x; };
 		T height() const { return y; };
 
+		bool operator ==(const Vec2<T>& another) const { return x == another.x&&y == another.y; };
+		bool operator !=(const Vec2<T>& another) const { return x != another.x || y != another.y; };
+
 		Vec2<T> operator* (const T v) const { return Vec2<T>(x*v, y*v); };
 		Vec2<T> operator* (const Vec2<T> &v) const{ return Vec2<T>(x*v.x, y*v.y); };
 		Vec2<T>& operator*= (const T v) { x *= v, y *= v; return *this; };
@@ -61,6 +64,8 @@ namespace redips{
 		T dot(const Vec3<T> &v) const { return x*v.x + y*v.y + z*v.z; };
 
 		Vec3<T> square() const{ return Vec3<T>(x*x, y*y, z*z); };
+
+		Vec3<T> bgr() const { return Vec3<T>(z,y,x); };
 
 		unsigned char maxdim(){
 			unsigned char dim = 0;
