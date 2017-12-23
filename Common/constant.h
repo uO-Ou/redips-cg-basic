@@ -39,3 +39,4 @@ namespace redips{
 
 typedef unsigned char BYTE;
 
+#define CHECK_GL_ERROR(s) {if(glGetError()!=GL_NO_ERROR){printf("glError %s\n",(s));exit(-1);};}

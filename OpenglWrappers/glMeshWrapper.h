@@ -205,9 +205,18 @@ namespace redips{
 		const Triangles* model_ptr()  const{ return this->model; }
 
 		//shader uniforms
-	    void uniformMat44f(const char* name,const float* value){ glUniformMatrix4fv(glGetUniformLocation(m_shader->Program, name), 1, GL_FALSE, value); }
-		void uniformFloat3(const char* name,const redips::float3& value){ glUniform3f(glGetUniformLocation(m_shader->Program, name), value.x,value.y,value.z); }
-		void uniformInt1(const char* name, int value){ glUniform1i(glGetUniformLocation(m_shader->Program, name), value); };
+	    void uniformMat44f(const char* name,const float* value){ 
+			m_shader->Use();
+			glUniformMatrix4fv(glGetUniformLocation(m_shader->Program, name), 1, GL_FALSE, value); 
+		}
+		void uniformFloat3(const char* name,const redips::float3& value){
+			m_shader->Use();
+			glUniform3f(glGetUniformLocation(m_shader->Program, name), value.x, value.y, value.z);
+		}
+		void uniformInt1(const char* name, int value){ 
+			m_shader->Use();
+			glUniform1i(glGetUniformLocation(m_shader->Program, name), value); 
+		};
 	protected:
 		int meshCnt = 0;
 		int textureCnt = 0;

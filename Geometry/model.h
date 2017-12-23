@@ -38,8 +38,8 @@ namespace redips{
 	public:
 		//return a reference to geometry[index]'s material
 		virtual const Material& getMaterial(int index) const = 0;
-		//return texcoord of pos
-		virtual float2 texcoord(int geoId, const float3& pos) const = 0;
+		//return texcoord of pos. incase a obj file doesnt contain texcoord, result.z will be 0
+		virtual float3 texcoord(int geoId, const float3& pos) const = 0;
 		//check if ray intersects with model
 		virtual bool intersect(const Ray& ray, HitRecord& record) = 0;
 		//build a kdtree to accelerate ray-model intersect operation

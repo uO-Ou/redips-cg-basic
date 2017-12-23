@@ -41,4 +41,5 @@ void main(){
     else diffuse *= diffuseColor;
 
 	color = vec4(ambient+diffuse+specular,1.0f);
+	color = vec4(0,1,0,1);
 } 

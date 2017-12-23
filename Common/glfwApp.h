@@ -51,7 +51,6 @@ namespace redips{
 					}
 					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 					glfwPollEvents();
-					
 					if (bindedCamera){
 						if (bindedCamera->type == CAMERA_TYPE::_phc_){
 							redips::PhC* cam = ((redips::PhC*)bindedCamera);
@@ -87,7 +86,10 @@ namespace redips{
 			void acceptMouseControl(bool flag) { enableMouse = flag; };
 			void stretchMouSensitivity(float scale) { mouSensitivity *= scale; };
 			void stretchscrollSensitivity(float scale) { scrollSensitivity *= scale; };
-			void stretchKeyboardSensitivity(float scale) { keyboardSensitivity *= scale; };
+			void stretchKeyboardSensitivity(float scale) { 
+				keyboardSensitivity *= scale; 
+				if (keyboardSensitivity < 1e-4) keyboardSensitivity = 1e-3;
+			};
 			void setWindowTitle(const char* title){ strcpy(windowTitle, title); }
 			bool keydown(int id){ return keys[id]; }
 			void closeWindow(){ glfwSetWindowShouldClose(window, GL_TRUE); }
@@ -121,7 +123,10 @@ namespace redips{
 				// Define the viewport dimensions
 				glViewport(0, 0, win_width, win_height);
 				glEnable(GL_DEPTH_TEST);
-				glClearColor(0.93f, 0.83f, 0.51f, 1.0f);
+				glClearColor(0.88f, 0.99f, 0.99f, 1.0f);
+				//glClearColor(0.27f, 0.55f, 0.52f, 1.0f);
+
+				CHECK_GL_ERROR("opengl-environment setup failed");
 			};
 
 			//key callback

@@ -252,9 +252,10 @@ namespace redips{
 			return mesh->getMaterial(index);
 		}
 
-		float2 texcoord(int faceId, const float3& pos) const{
-			const Material& mtl = mesh->getMaterial(faceId);
+		float3 texcoord(int faceId, const float3& pos) const{
 			const Mesh::FGroup& groupInfo = (mesh->groups[mesh->faceGroupId[faceId]]);
+			if (groupInfo.hasTexture == false) return float3();
+			const Material& mtl = mesh->getMaterial(faceId);
 			const std::vector<float3>& vertices = mesh->vertices;
 			const std::vector<float3>& texcoords = mesh->texcoords;
 			const std::vector<int3>& faces_v = mesh->faces_v;
@@ -269,7 +270,7 @@ namespace redips{
 			texcoord.x -= int(texcoord.x), texcoord.y -= int(texcoord.y);
 			if (texcoord.x < 0) texcoord.x = 1 + texcoord.x;
 			if (texcoord.y < 0) texcoord.y = 1 + texcoord.y;
-			return redips::float2(texcoord.x,texcoord.y);
+			return redips::float3(texcoord.x,texcoord.y,1);
 		}
 
 		//add a triangle to a new group, need to modify

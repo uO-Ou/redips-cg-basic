@@ -41,8 +41,8 @@ namespace redips{
 					if (winsize.x < 1) winsize = texsize;
 					if (winsize != instance->winsize) instance->setWinsize(winsize);
 				}
-				return instance;
 			}
+			return instance;
 		}
 		~glImageRender(){ 
 			if (readFBOId) glDeleteFramebuffers(1, &readFBOId);
@@ -56,4 +56,46 @@ namespace redips{
 		}
 	};
 	glImageRender* glImageRender::instance = nullptr;
+
+	//save current frame to a picture
+	class glScreenCapture{
+	private:
+		redips::int2 winsize;
+		BYTE* imgbuf = nullptr;
+		glScreenCapture(redips::int2 winsize):winsize(winsize){
+			imgbuf = new BYTE[winsize.x*winsize.y*4];
+		};
+		~glScreenCapture(){
+			if (imgbuf) delete imgbuf;
+		};
+		static glScreenCapture* instance;
+		int frameId = 0;
+		char strbuf[2048];
+	public:
+		void capture(const char* picname){
+			GLint eReadType, eReadFormat;
+			glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &eReadFormat);
+			glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, &eReadType);
+
+			//glReadPixels(0, 0, winsize.x, winsize.y, GL_RGBA, GL_UNSIGNED_BYTE, imgbuf);
+			glReadPixels(0, 0, winsize.x, winsize.y, eReadFormat, eReadType, imgbuf);
+			CHECK_GL_ERROR("read pixels failed");
+			sprintf(strbuf,"%s%d.bmp",picname,frameId++);
+			if (redips::FImage::saveImage(imgbuf, winsize.x, winsize.y, 4, strbuf)){
+				printf("[glScreenCapture] : save picture [%s] success !\n", strbuf);
+			}
+			else{
+				printf("[glScreenCapture] : save picture [%s] failed !\n", strbuf);
+			}
+		}
+		static glScreenCapture* getInstance(int2 winsize){
+			if (instance == nullptr) instance = new glScreenCapture(winsize);
+			else{
+				if (instance->winsize != winsize) delete instance;
+				instance = new glScreenCapture(winsize);
+			}
+			return instance;
+		}
+	};
+	glScreenCapture* glScreenCapture::instance = nullptr;
 };

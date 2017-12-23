@@ -90,9 +90,11 @@ namespace redips{
 			}
 			else{
 				float3 diffuseColor = mtl.diffuse;
-				float2 texcoord = objects[hitId]->texcoord(records.hitIndex, hitPoint);
-				if (mtl.texture_kd) diffuseColor = mtl.tex_diffuse(texcoord.x, texcoord.y);
-				if (mtl.texture_ka) ambientColor = mtl.tex_ambient(texcoord.x, texcoord.y);
+				float3 texcoord = objects[hitId]->texcoord(records.hitIndex, hitPoint);
+				if (texcoord.z > 0){ 
+					if (mtl.texture_kd) diffuseColor = mtl.tex_diffuse(texcoord.x, texcoord.y);
+					if (mtl.texture_ka) ambientColor = mtl.tex_ambient(texcoord.x, texcoord.y);
+				}
 				
 				for (int i = 0; i < lights.size(); i++){
 					float3 lightDir = lights[i].pos - hitPoint;

@@ -32,15 +32,15 @@ namespace redips{
 			return material;
 		}
 
-		float2 texcoord(int particleId, const float3& pos) const{
+		float3 texcoord(int particleId, const float3& pos) const{
 			redips::float3 ray = (pos - (transform*float4(spheres[particleId], 1.0f)).vec3());
 			float coord_y = acos(ray.unit().dot(redips::float3(0, -1, 0))) * PI_INV;
 
 			ray.y = 0;
-			if (ray.length2() < 1e-6) return redips::float2(0,coord_y);
+			if (ray.length2() < 1e-6) return redips::float3(0,coord_y,1);
 			float coord_x = acos(ray.unit().dot(redips::float3(-1, 0, 0))) * PI_INV * 0.5f;
 			if (ray.z < 0) coord_x = 1.0f - coord_x;
-			return redips::float2(coord_x,coord_y);
+			return redips::float3(coord_x,coord_y,1);
 		}
 
 		void setMaterial(const Material& mtl) { material = mtl; };
