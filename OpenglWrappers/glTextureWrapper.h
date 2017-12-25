@@ -177,17 +177,16 @@ namespace redips{
 				
 				glGetTexImage(GL_TEXTURE_2D, 0, Format, Type, buffer);
 				
-				freopen(file,"w",stdout);
+				std::ofstream fout(file);
 				if (Type == GL_FLOAT){
 					for (int y = 0; y < dim.y; y++) {
 						for (int x = 0; x < dim.x; x++) {
-							printf("["); for (int i = 0; i < cpp; i++) printf("%f ",((float*)buffer)[y*dim.x*cpp+x*cpp+i]); printf("] ");
+							fout << "["; for (int i = 0; i < cpp; i++) fout << ((float*)buffer)[y*dim.x*cpp + x*cpp + i]; fout << "] ";
 						}
-						puts("");
+						fout << std::endl;
 					}
 				}
-				fclose(stdout);
-				freopen("CON","w",stdout);
+				fout.close();
 
 				glBindTexture(GL_TEXTURE_2D, 0);
 				puts("[glTexture] : write texture to disk finish");

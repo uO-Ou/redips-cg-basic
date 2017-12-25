@@ -80,7 +80,7 @@ namespace redips{
 			//glReadPixels(0, 0, winsize.x, winsize.y, GL_RGBA, GL_UNSIGNED_BYTE, imgbuf);
 			glReadPixels(0, 0, winsize.x, winsize.y, eReadFormat, eReadType, imgbuf);
 			CHECK_GL_ERROR("read pixels failed");
-			sprintf(strbuf,"%s%d.bmp",picname,frameId++);
+			sprintf_s(strbuf,"%s%d.bmp",picname,frameId++);
 			if (redips::FImage::saveImage(imgbuf, winsize.x, winsize.y, 4, strbuf)){
 				printf("[glScreenCapture] : save picture [%s] success !\n", strbuf);
 			}

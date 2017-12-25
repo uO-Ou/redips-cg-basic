@@ -101,24 +101,24 @@ namespace redips{
 					}
 					switch (groups[curGid].faceType){
 					case GROUP_FACE_TYPE::_single_: {
-									   sscanf(str1.c_str(), "%d", v + 0);
-									   sscanf(str2.c_str(), "%d", v + 1);
-									   sscanf(str3.c_str(), "%d", v + 2);
+									   sscanf_s(str1.c_str(), "%d", v + 0);
+									   sscanf_s(str2.c_str(), "%d", v + 1);
+									   sscanf_s(str3.c_str(), "%d", v + 2);
 									   faces_v.push_back(int3(v[0] - 1, v[1] - 1, v[2] - 1));
 									   break;
 					}
 					case GROUP_FACE_TYPE::_withnormal_:{
-										  sscanf(str1.c_str(), "%d//%d", v + 0, vn + 0);
-										  sscanf(str2.c_str(), "%d//%d", v + 1, vn + 1);
-										  sscanf(str3.c_str(), "%d//%d", v + 2, vn + 2);
+										  sscanf_s(str1.c_str(), "%d//%d", v + 0, vn + 0);
+										  sscanf_s(str2.c_str(), "%d//%d", v + 1, vn + 1);
+										  sscanf_s(str3.c_str(), "%d//%d", v + 2, vn + 2);
 										  faces_v.push_back(int3(v[0] - 1, v[1] - 1, v[2] - 1));
 										  faces_vn.push_back(int3(vn[0] - 1, vn[1] - 1, vn[2] - 1));
 										  break;
 					}
 					case GROUP_FACE_TYPE::_withtex_:{
-									   sscanf(str1.c_str(), "%d/%d/%d", v + 0, vt + 0, vn + 0);
-									   sscanf(str2.c_str(), "%d/%d/%d", v + 1, vt + 1, vn + 1);
-									   sscanf(str3.c_str(), "%d/%d/%d", v + 2, vt + 2, vn + 2);
+									   sscanf_s(str1.c_str(), "%d/%d/%d", v + 0, vt + 0, vn + 0);
+									   sscanf_s(str2.c_str(), "%d/%d/%d", v + 1, vt + 1, vn + 1);
+									   sscanf_s(str3.c_str(), "%d/%d/%d", v + 2, vt + 2, vn + 2);
 									   faces_v.push_back(int3(v[0] - 1, v[1] - 1, v[2] - 1));
 									   faces_vt.push_back(int3(vt[0] - 1, vt[1] - 1, vt[2] - 1));
 									   faces_vn.push_back(int3(vn[0] - 1, vn[1] - 1, vn[2] - 1));

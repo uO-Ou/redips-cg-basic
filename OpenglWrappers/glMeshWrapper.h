@@ -198,6 +198,9 @@ namespace redips{
 			}
 		}
 		virtual void draw() {
+			if (!m_shader) { 
+				std::cerr << "shader error" << std::endl; return; 
+			};
 			m_shader->Use();
 			drawAllMeshes();
 		};

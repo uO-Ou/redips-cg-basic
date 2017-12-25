@@ -1,9 +1,14 @@
 /*
 * Author : redips redips.xin@gmail.com
-* Date : 2017.12.9
+* Date : 2017.12.25
 * Description : constants and enums
 */
 #pragma once
+
+//important! 
+//_REDIPS_ROOT_PATH_ indicates where to find redips-related resources, such as vs/fs shaders
+#define _REDIPS_ROOT_PATH_ "E:/Documents/CG/CGLib/redips"
+
 namespace redips{
 	enum class MODEL_TYPE{ _sphere_, _triangle_, _panel_ };
 	enum class CAMERA_TYPE{ _phc_, _glc_, _mpc_ };
@@ -40,3 +45,5 @@ namespace redips{
 typedef unsigned char BYTE;
 
 #define CHECK_GL_ERROR(s) {if(glGetError()!=GL_NO_ERROR){printf("glError %s\n",(s));exit(-1);};}
+
+#define _RUNTIME_ASSERT_(exp,str) {if((exp)!=true){printf("assert [%s] failed\n",str);exit(-2);}}

@@ -46,7 +46,7 @@ namespace redips{
 					deltaTime = currentFrame - lastFrame;
 					lastFrame = currentFrame;
 					if (show_fps){
-						sprintf(strbuf, "%s - %.1f fps, %.1f ms\n",windowTitle, 1 / deltaTime, deltaTime * 1000);
+						sprintf_s(strbuf, "%s - %.1f fps, %.1f ms\n",windowTitle, 1 / deltaTime, deltaTime * 1000);
 						glfwSetWindowTitle(window, strbuf);
 					}
 					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -90,7 +90,7 @@ namespace redips{
 				keyboardSensitivity *= scale; 
 				if (keyboardSensitivity < 1e-4) keyboardSensitivity = 1e-3;
 			};
-			void setWindowTitle(const char* title){ strcpy(windowTitle, title); }
+			void setWindowTitle(const char* title){ strcpy_s(windowTitle, title); }
 			bool keydown(int id){ return keys[id]; }
 			void closeWindow(){ glfwSetWindowShouldClose(window, GL_TRUE); }
 		private:
@@ -98,7 +98,7 @@ namespace redips{
 			static GLFWwindow* window;
 			App(GLuint width, GLuint height, const char* title){
 				win_width = width, win_height = height;
-				strcpy(windowTitle,title);
+				strcpy_s(windowTitle,title);
 
 				glfwInit();
 				glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);

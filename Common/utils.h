@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -10,10 +11,21 @@ namespace redips {
 			if (instance == nullptr) instance = new StringUtil();
 			return *instance; 
 		}
-        StringUtil& read(std::istream& in){
-			in.getline(strbuf, BUFFER_SIZE);
-			return *instance;
-        }
+		explicit operator std::string(){ return std::string(strbuf); }
+		static int split(std::string str,std::string spliters,std::vector<std::string>& result){
+			int spliter_cnt = spliters.size();
+			auto checker = [=](char c){ for (int i = 0; i < spliter_cnt; i++) if (c == spliters[i]) return false; return true; };
+			
+			result.clear();
+			int i, j;
+			for (i = 0; i < str.length(); i=j){
+				j = i;
+				while (j < str.length() && checker(str[j])) j++;
+				if (j>i) result.push_back(str.substr(i,j-i));
+				else j=i+1;
+			}
+			return result.size();
+		}
 		//std::string&& str(){	return std::string(strbuf); }
 		std::string trim(){
 			return trim(std::string(strbuf));
@@ -41,3 +53,5 @@ namespace redips {
     };
 	StringUtil* StringUtil::instance = nullptr;
 };
+
+#define STRING_UTIL redips::StringUtil::Instance()
