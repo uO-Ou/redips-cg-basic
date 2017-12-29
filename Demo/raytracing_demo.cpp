@@ -18,7 +18,7 @@ auto imageRender = redips::glImageRender::getInstance(redips::int2(rayTracer->im
 redips::PhC phc(60, 1.0f, 1.0f, 10000);
 
 //load obj model
-redips::Triangles model("E:/Documents/models/a世界著名建筑/tajmahl/tajmahal.obj");
+redips::Triangles model("E:/Documents/models/tajmahal.obj");
 
 void movement(){}
 

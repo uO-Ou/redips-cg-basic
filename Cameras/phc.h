@@ -203,6 +203,7 @@ namespace redips{
 			updateExtrinsic();
 		}
 		//all in rad
+		//rotate around y
 		void pan(float angle){
 			Mat33f rotate = Mat33f::pan(angle);
 			cameraX = rotate*cameraX;
@@ -210,6 +211,7 @@ namespace redips{
 			cameraZ = rotate*cameraZ;
 			updateExtrinsic();
 		}
+		//rotate around x
 		void tilt(float angle){
 			Mat33f rotate = Mat33f::tilt(angle);
 			cameraX = rotate*cameraX;
@@ -217,6 +219,7 @@ namespace redips{
 			cameraZ = rotate*cameraZ;
 			updateExtrinsic();
 		}
+		//rotate around z
 		void roll(float angle){
 			Mat33f rotate = Mat33f::roll(angle);
 			cameraX = rotate*cameraX;
@@ -244,8 +247,8 @@ namespace redips{
 
 		//in world coordinates;
 		float3 cameraX, cameraY, cameraZ, cameraO;
-	private:
-		//float hAov;   //deprecated, horizontal angle of view 
+	protected:
+		//float hAov;   //deprecated, horizontal angle of view
 		float vAov;    //vertical angle of view
 		float filmAspectRatio;
 		float imageAspectRatio;
@@ -279,5 +282,3 @@ namespace redips{
 		}
 	};
 };
-
-

@@ -15,7 +15,7 @@ redips::PhC phc(60, 1.0f, 1.0f, 10000);
 redips::GBuffer gbuffer(WINWIDTH, WINHEIGHT);
 
 //load a obj and then wrap into a glMesh。
-redips::GBufferMesh mesh(new redips::Triangles("E:/Documents/models/a世界著名建筑/tajmahl/tajmahal.obj"));
+redips::GBufferMesh mesh(new redips::Triangles("E:/Documents/models/tajmahal.obj"));
 
 void movement(){}
 

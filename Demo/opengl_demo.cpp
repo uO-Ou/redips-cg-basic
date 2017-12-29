@@ -8,7 +8,7 @@ auto application = redips::glfw::getInstance(720,720);
 redips::PhC phc(60, 1.0f, 1.0f, 10000);
 
 //load a obj and then wrap into a glMesh。
-redips::TexLightMesh mesh(new redips::Triangles("E:/Documents/models/a世界著名建筑/tajmahl/tajmahal.obj"));
+redips::TexLightMesh mesh(new redips::Triangles("E:/Documents/models/tajmahal.obj"));
 
 void movement(){}
 

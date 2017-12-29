@@ -161,7 +161,7 @@ namespace redips{
 			return texId;
 		}
 
-		void save2disk(const char* file){
+		void save2disk(const char* file)const {
 			if (texture_type == GL_TEXTURE_TYPE::_2d_){
 				glBindTexture(GL_TEXTURE_2D, texId);
 				int cpp = 0;
@@ -178,13 +178,20 @@ namespace redips{
 				glGetTexImage(GL_TEXTURE_2D, 0, Format, Type, buffer);
 				
 				std::ofstream fout(file);
+				fout <<dim.y<<" "<<dim.x<<" "<<cpp<<std::endl;
 				if (Type == GL_FLOAT){
 					for (int y = 0; y < dim.y; y++) {
 						for (int x = 0; x < dim.x; x++) {
-							fout << "["; for (int i = 0; i < cpp; i++) fout << ((float*)buffer)[y*dim.x*cpp + x*cpp + i]; fout << "] ";
+							//fout << "["; 
+							for (int i = 0; i < cpp; i++) 
+								fout << ((float*)buffer)[y*dim.x*cpp + x*cpp + i]<<" "; 
+							//fout << "] ";
 						}
 						fout << std::endl;
 					}
+				}
+				else{
+					puts("[glTexture] : dont support int");
 				}
 				fout.close();
 

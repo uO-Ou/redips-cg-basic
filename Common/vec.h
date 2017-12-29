@@ -175,21 +175,24 @@ namespace redips{
 		static Mat33<T> eye(){ Mat33<T> ret;	for (int i = 0; i < 3; ++i) ret[i][i] = T(1); return ret; };
 
 		//column-major transform
-		static Mat33<T> tilt(float angle){//rotate around x 
+		//rotate around x
+		static Mat33<T> tilt(float angle){ 
 			Mat33<T> ret = Mat33<T>::eye();
 			ret[1][1] = ret[2][2] = cos(angle);
 			ret[2][1] = ret[1][2] = sin(angle);
 			ret[1][2] *= -1;
 			return ret;
 		}
-		static Mat33<T> pan(float angle){//rotate around y
+		//rotate around y
+		static Mat33<T> pan(float angle){
 			Mat33<T> ret = Mat33<float>::eye();
 			ret[0][0] = ret[2][2] = cos(angle);
 			ret[0][2] = ret[2][0] = sin(angle);
 			ret[2][0] *= -1;
 			return ret;
 		}
-		static Mat33<T> roll(float angle){//rotate around z
+		//rotate around z
+		static Mat33<T> roll(float angle){
 			Mat33<T> ret = Mat33<float>::eye();
 			ret[0][0] = ret[1][1] = cos(angle);
 			ret[0][1] = ret[1][0] = sin(angle);

@@ -10,31 +10,44 @@
 #include "../Cameras/phc.h"
 namespace redips{
 	namespace glfw{
-		bool keys[1024];
-		bool keysPressed[1024];
+		static bool keys[1024];
+		static bool keysPressed[1024];
 
-		GLfloat deltaTime = 0.0f;
-		GLfloat lastFrame = 0.0f;
+		//class KeyEvent{
+		//public:
+		//	static void key_callback(int _key, int action){
+		//		if (action != GLFW_PRESS){ _key = 0; return;}
+		//		key = _key;
+		//	}
+		//	inline int getKey()const { return key; };
+		//private:
+		//	static int key;
+		//};
+		//int KeyEvent::key = 0;
+
+		static GLfloat deltaTime = 0.0f;
+		static GLfloat lastFrame = 0.0f;
 		
-		GLuint win_width = 512, win_height = 512;
+		static GLuint win_width = 512, win_height = 512;
 		
-		bool show_fps = true;
-		bool firstMouse = true;
-		bool enableMouse = true;
-		float xangle = 0, yangle = 0;  // for camera's Euler angles
-		double lastX = 256, lastY = 256, mouSensitivity = 0.02, scrollSensitivity = 0.1f, keyboardSensitivity =0.2f;
+		static bool show_fps = true;
+		static bool firstMouse = true;
+		static bool enableMouse = true;
+		static float xangle = 0, yangle = 0;  // for camera's Euler angles
+		static double lastX = 256, lastY = 256, mouSensitivity = 0.02, scrollSensitivity = 0.1f, keyboardSensitivity = 0.5f;
 
 		//a camera binded to current window
-		Camera *bindedCamera = nullptr;
+		static Camera *bindedCamera = nullptr;
 
 		//call backs		
-		void(*displayCallback)() = nullptr;
-		void(*mouseCallback)(double, double) = nullptr;
-		void(*scrollCallback)(double) = nullptr;
+		static void(*displayCallback)() = nullptr;
+		static void(*mouseCallback)(double, double) = nullptr;
+		static void(*scrollCallback)(double) = nullptr;
 
-		char strbuf[512],windowTitle[256];
+		static char strbuf[512], windowTitle[256];
 
 		class App{
+			//KeyEvent keyRecorder;
 		public:
 			static App* getInstance(int width=512,int height = 512,const char* title = "redips"){
 				if (instance == nullptr) instance = new App(width, height, title); return instance;
@@ -92,6 +105,7 @@ namespace redips{
 			};
 			void setWindowTitle(const char* title){ strcpy_s(windowTitle, title); }
 			bool keydown(int id){ return keys[id]; }
+			//int keydown(){ return keyRecorder.getKey(); };
 			void closeWindow(){ glfwSetWindowShouldClose(window, GL_TRUE); }
 		private:
 			static App* instance;
@@ -123,8 +137,9 @@ namespace redips{
 				// Define the viewport dimensions
 				glViewport(0, 0, win_width, win_height);
 				glEnable(GL_DEPTH_TEST);
-				glClearColor(0.88f, 0.99f, 0.99f, 1.0f);
+				//glClearColor(0.88f, 0.99f, 0.99f, 1.0f);
 				//glClearColor(0.27f, 0.55f, 0.52f, 1.0f);
+				glClearColor(0.0f,0.0f,0.0f,1.0f);
 
 				CHECK_GL_ERROR("opengl-environment setup failed");
 			};
@@ -192,7 +207,7 @@ namespace redips{
 		App* App::instance = nullptr;
 		GLFWwindow* App::window = nullptr;
 
-		App* getInstance(int width = 512, int height = 512, const char* title = "redips"){ 
+		static App* getInstance(int width = 512, int height = 512, const char* title = "redips"){
 			return App::getInstance(width,height,title); 
 		}
 	}
