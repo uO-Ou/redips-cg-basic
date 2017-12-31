@@ -22,6 +22,8 @@ namespace redips{
 		bool operator ==(const Vec2<T>& another) const { return x == another.x&&y == another.y; };
 		bool operator !=(const Vec2<T>& another) const { return x != another.x || y != another.y; };
 
+		Vec2<T> operator/ (const Vec2& another) const{ return Vec2<T>(x / another.x, y / another.y); };
+
 		Vec2<T> operator* (const T v) const { return Vec2<T>(x*v, y*v); };
 		Vec2<T> operator* (const Vec2<T> &v) const{ return Vec2<T>(x*v.x, y*v.y); };
 		Vec2<T>& operator*= (const T v) { x *= v, y *= v; return *this; };
