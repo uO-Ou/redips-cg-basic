@@ -13,7 +13,7 @@ namespace redips{
 	public:
 		T x, y;
 		Vec2() : x(T(0)), y(T(0)){};
-		Vec2(T v) : x(T(v)), y(T(v)){};
+		explicit Vec2(T v) : x(T(v)), y(T(v)){};
 		Vec2(T tx, T ty) : x(tx), y(ty){};
 
 		T width() const { return x; };
@@ -39,6 +39,7 @@ namespace redips{
 	};
 	typedef Vec2<int> int2;
 	typedef Vec2<float > float2;
+	typedef Vec2<unsigned int> uint2;
 
 	template<typename T>
 	class Mat33;
@@ -51,9 +52,9 @@ namespace redips{
 	public:
 		T x, y, z;
 		Vec3() :x(T(0)), y(T(0)), z(T(0)){};
-		Vec3(T v) :x(T(v)), y(T(v)), z(T(v)){};
+		explicit Vec3(T v) :x(T(v)), y(T(v)), z(T(v)){};
+		explicit Vec3(T* v) :x(v[0]), y(v[1]), z(v[2]){};
 		Vec3(T tx, T ty, T tz) :x(T(tx)), y(T(ty)), z(T(tz)){};
-		Vec3(T* v) :x(v[0]), y(v[1]), z(v[2]){};
 
 		float length() const { return sqrt((float)x*x + y*y + z*z); };
 		T length2() const { return x*x + y*y + z*z; };
@@ -111,17 +112,18 @@ namespace redips{
 		*/
 		const Vec2<T> vec2() const { return Vec2<T>(x, y); };
 	};
-	typedef Vec3<float > float3;
+	typedef Vec3<unsigned int> uint3;
 	typedef Vec3<int > int3;
+	typedef Vec3<float > float3;
 
 	template<typename T>
 	class Vec4{
 	public:
 		T x, y, z, w;
 		Vec4() : x(T(0)), y(T(0)), z(T(0)), w(T(0)){};
-		Vec4(T v) : x(v), y(v), z(v), w(v){};
+		explicit Vec4(T v) : x(v), y(v), z(v), w(v){};
+		explicit Vec4(T* v) : x(v[0]), y(v[1]), z(v[2]), w(v[3]){};
 		Vec4(T tx, T ty, T tz, T tw) : x(tx), y(ty), z(tz), w(tw){};
-		Vec4(T* v) : x(v[0]), y(v[1]), z(v[2]), w(v[3]){};
 		Vec4(const Vec3<T> &v, T w) : x(v.x), y(v.y), z(v.z), w(w){};
 
 		/*

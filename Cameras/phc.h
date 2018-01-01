@@ -53,6 +53,23 @@ namespace redips{
 			type = CAMERA_TYPE::_phc_;
 			reset();
 		}
+		PhC& operator=(const PhC& another){
+			resolution = another.resolution;
+			filmAspectRatio = another.filmAspectRatio;
+			imageAspectRatio = another.imageAspectRatio;
+
+			cameraO = another.cameraO;
+			cameraX = another.cameraX;
+			cameraY = another.cameraY;
+			cameraZ = another.cameraZ;
+			updateExtrinsic();
+
+			farp = another.farp;
+			nearp = another.nearp;
+			filmSize = another.filmSize;
+			setFocalLength(another.focalLength);
+			return *this;
+		}
 		~PhC(){};
 		void updateIntrinsic(){
 			//update projection-matrix

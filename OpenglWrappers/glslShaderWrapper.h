@@ -117,6 +117,15 @@ namespace redips{
 			this->Program = another.Program;
 			return *this;
 		};
+		void uniformMat44f(const char* name, const float* value){
+			glUniformMatrix4fv(glGetUniformLocation(Program, name), 1, GL_FALSE, value);
+		}
+		void uniformFloat3(const char* name, const redips::float3& value){
+			glUniform3f(glGetUniformLocation(Program, name), value.x, value.y, value.z);
+		}
+		void uniformInt1(const char* name, int value){
+			glUniform1i(glGetUniformLocation(Program, name), value);
+		};
 	};
 
 	class ShaderManager{

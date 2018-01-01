@@ -60,29 +60,36 @@ namespace redips{
 				for (int x = 0; x < imgwidth; x++) for (int y = 0; y < imgheight; y++){
 					records.reset();
 					//in transition region
-					if (abs(x-imgwidth/2)<=mpc.tpanel.x/2&&abs(y-imgheight/2)<=mpc.tpanel.y){
+					if (abs(x-imgwidth/2)<mpc.tpanel.x/2&&abs(y-imgheight/2)<mpc.tpanel.y/2){
 						float3 spoint((x*1.0/mpc.resolution.x-0.5f)*mpc.canvaSize.x,(y*1.0/mpc.resolution.y-0.5f)*mpc.canvaSize.y,mpc.nearp);
 						float3 epoint = mpc.layers[0][0].getEndsPoint(spoint);
 						{//first layer
-							auto tsp = mpc.c2w3()*spoint;
-							auto tep = mpc.c2w3()*epoint;
+							auto tsp = mpc.c2w3()*spoint+mpc.pos();
+							auto tep = mpc.c2w3()*epoint+mpc.pos();
 							records.distance = (tep - tsp).length();
 							trace(1, Ray(tsp,tep-tsp), records);
 						}
+						
 						//middle layers
 						if(records.hitIndex<0){
 							spoint = epoint;
 							int mpc_region_id = -1;
+							float min_dist = FLT_MAX;
 							for (int i = 0; i < 5; i++){
-								if (mpc.layers[1][i].contains(spoint)){
-									mpc_region_id = i; break;
+								//if (mpc.layers[1][i].contains(spoint)){
+								//	mpc_region_id = i; break;
+								//}
+								auto tmp = mpc.layers[1][i].contains(spoint);
+								if (tmp<min_dist){
+									mpc_region_id = i;
+									min_dist = tmp;
 								}
 							}
 							_RUNTIME_ASSERT_(mpc_region_id>-1,"raytracing mpc-camera transition region ray shooter failed");
 							for (int l = 1; l < 4; l++){
 								epoint = mpc.layers[l][mpc_region_id].getEndsPoint(spoint);
-								auto tsp = mpc.c2w3()*spoint;
-								auto tep = mpc.c2w3()*epoint;
+								auto tsp = mpc.c2w3()*spoint+mpc.pos();
+								auto tep = mpc.c2w3()*epoint+mpc.pos();
 								records.distance = (tep - tsp).length();
 								trace(1, Ray(tsp, tep - tsp), records);
 								if (records.hitIndex >= 0) break;
@@ -92,8 +99,8 @@ namespace redips{
 						//final layer
 						if (records.hitIndex<0){
 							epoint = mpc.layers[4][0].getEndsPoint(spoint);
-							auto tsp = mpc.c2w3()*spoint;
-							auto tep = mpc.c2w3()*epoint;
+							auto tsp = mpc.c2w3()*spoint+mpc.pos();
+							auto tep = mpc.c2w3()*epoint+mpc.pos();
 							records.distance = (tep - tsp).length();
 							trace(1, Ray(tsp, tep - tsp), records);
 						}
@@ -134,7 +141,10 @@ namespace redips{
 				}
 			}
 			//if not,return background-color
-			if (hitId < 0) return ;
+			if (hitId < 0) {
+				records.color = bgColor;
+				return;
+			}
 
 			//get hitted material
 			const Material &mtl = objects[hitId]->getMaterial(records.hitIndex);
