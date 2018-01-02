@@ -14,7 +14,7 @@ namespace redips{
 	class RayTracer {
 	public:
 		RayTracer(){
-			bgColor = float3(0.2f, 0.2f, 0.2f);
+			bgColor = float3(0.88f, 0.99f, 0.99f);
 			MAX_RAYTRACE_DEPTH = 1;
 		};
 		~RayTracer(){

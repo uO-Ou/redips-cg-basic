@@ -37,7 +37,7 @@ namespace redips{
 			canvaSize.x = canvaSize.y * aspect;
 
 			filmSize = canvaSize;         //unknown,set to canvaSize
-			focalLength = fabs(nearp); //unknown,set to nearp
+			focalLength = fabs(nearp);    //unknown,set to nearp
 			updateIntrinsic();
 			type = CAMERA_TYPE::_phc_;
 			reset();
@@ -71,6 +71,55 @@ namespace redips{
 			return *this;
 		}
 		~PhC(){};
+		
+		//notice: focus-pos shouldn't coinline with up! this may not be left-hand base
+		void lookAt(const float3& pos, const float3& focus, const float3& up){
+			cameraZ = (pos - focus).unit();
+			cameraX = (up ^ cameraZ).unit();
+			cameraY = (cameraZ ^ cameraX).unit();
+			cameraO = pos;
+			updateExtrinsic();
+		}
+		//rotate around y (rad)
+		void pan(float angle){
+			Mat33f rotate = Mat33f::pan(angle);
+			cameraX = rotate*cameraX;
+			cameraY = rotate*cameraY;
+			cameraZ = rotate*cameraZ;
+			updateExtrinsic();
+		}
+		//rotate around x (rad)
+		void tilt(float angle){
+			Mat33f rotate = Mat33f::tilt(angle);
+			cameraX = rotate*cameraX;
+			cameraY = rotate*cameraY;
+			cameraZ = rotate*cameraZ;
+			updateExtrinsic();
+		}
+		//rotate around z (rad)
+		void roll(float angle){
+			Mat33f rotate = Mat33f::roll(angle);
+			cameraX = rotate*cameraX;
+			cameraY = rotate*cameraY;
+			cameraZ = rotate*cameraZ;
+			updateExtrinsic();
+		}
+		void translate(const float3& offset){
+			cameraO += offset;
+			updateExtrinsic();
+		}
+		void moveTo(const float3& pos){
+			cameraO = pos;
+			updateExtrinsic();
+		}
+
+		//zoom-in when ratio>0, other wise zoom out
+		void zoom(float ratio){
+			if (1.0f + ratio > 0)	{
+				setFocalLength(focalLength*(1 + ratio));
+			}
+		}
+
 		void updateIntrinsic(){
 			//update projection-matrix
 			/*
@@ -103,25 +152,21 @@ namespace redips{
 			world2camera.setrow(float4(0.0f, 0.0f, 0.0f, 1.0f), 3);
 			world2camera = world2camera * Mat44f::translation(cameraO*-1);
 		}
-		void setExtrinsic(const Mat33f& axises,const float3& position){
-			   cameraX = axises.col(0);
-			   cameraY = axises.col(1);
-			   cameraZ = axises.col(2);
-			   cameraO = position;
-			   updateExtrinsic();
-		}
+
 		const float3& pos() const{ return cameraO; }
 		const Mat33f& c2w3() const { return camera2world3; }
 		const Mat44f& c2w4() const { return camera2world4; };
 		const Mat44f& w2c() const { return world2camera; }
 		const Mat44f& glProjection() const { return projection.transpose(); };
 		const Mat44f& glView() const { return world2camera.transpose(); };
-		float3 pixelWPos(int x,int y){
-			      float tx = (((0.5f + x) / resolution.x) - 0.5f) * canvaSize.x;
-				  float ty = (((0.5f + y) / resolution.y) - 0.5f) * canvaSize.y;
-				  return (camera2world3 * float3(tx, ty, nearp))+cameraO;
+		
+		//get pixel position in world-space
+		float3 getPixelWPos(int x,int y){
+			   float tx = (((0.5f + x) / resolution.x) - 0.5f) * canvaSize.x;
+			   float ty = (((0.5f + y) / resolution.y) - 0.5f) * canvaSize.y;
+			   return (camera2world3 * float3(tx, ty, nearp))+cameraO;
 		}
-		//gen rays in world space
+		//gen rays in world-space
 		Ray getRay(float u, float v) const{
 			float x = ((u+0.5f) / resolution.x - 0.5f) * canvaSize.x;
 			float y = ((v+0.5f) / resolution.y - 0.5f) * canvaSize.y;
@@ -151,6 +196,7 @@ namespace redips{
 			return true;
 		}
 	public:
+		//io function
 		void save(const char* file){
 			using namespace std;
 			ofstream fout(file);
@@ -161,18 +207,36 @@ namespace redips{
 			fout << cameraY.x << " " << cameraY.y << " " << cameraY.z << endl;
 			fout << cameraZ.x << " " << cameraZ.y << " " << cameraZ.z << endl;
 			fout << cameraO.x << " " << cameraO.y << " " << cameraO.z << endl;
+
+			fout << nearp << " " << farp << endl;
+			fout << focalLength << endl;
+			fout << filmSize.x << " " << filmSize.y << endl;
+
+			fout << resolution.x << " " << resolution.y << endl;
+			fout.close();
 		}
 		void load(const char* file){
 			using namespace std;
 			ifstream fin(file);
 			if (!fin.is_open()){
-				std::cout << "load finished" << endl; return;
+				std::cout << "[PhC] : load phc [" << file << "] failed" << endl; return;
 			}
 			fin >> cameraX.x >> cameraX.y >> cameraX.z;
 			fin >> cameraY.x >> cameraY.y >> cameraY.z;
 			fin >> cameraZ.x >> cameraZ.y >> cameraZ.z;
 			fin >> cameraO.x >> cameraO.y >> cameraO.z;
 			updateExtrinsic();
+
+			fin >> nearp >> farp;
+			fin >> focalLength;
+			fin >> filmSize.x >> filmSize.y;
+
+			fin >> resolution.x >> resolution.y;
+			setFocalLength(focalLength);
+
+			imageAspectRatio = resolution.x*1.0 / resolution.y;
+			filmAspectRatio = filmSize.x / filmSize.y;
+			fin.close();
 		}
 		friend std::ostream& operator<<(std::ostream& os, const PhC& phc){
 			using namespace std;
@@ -204,53 +268,34 @@ namespace redips{
 			}
 			else resolution = int2(width, int(width / imageAspectRatio));
 		}
-
-		//zoom-in when ratio>0, other wise zoom out
-		void zoom(float ratio){
-			if (1.0f + ratio > 0)	{
-				setFocalLength(focalLength*(1 + ratio));
-			}
-		}
-		//notice: focus-pos shouldn't coinline with up! this may not be left-hand base
-		void lookAt(const float3& pos, const float3& focus, const float3& up){
-			cameraZ = (pos - focus).unit();
-			cameraX = (up ^ cameraZ).unit();
-			cameraY = (cameraZ ^ cameraX).unit();
-			cameraO = pos;
+		void setExtrinsic(const Mat33f& axises, const float3& position){
+			cameraX = axises.col(0);
+			cameraY = axises.col(1);
+			cameraZ = axises.col(2);
+			cameraO = position;
 			updateExtrinsic();
 		}
-		//all in rad
-		//rotate around y
-		void pan(float angle){
-			Mat33f rotate = Mat33f::pan(angle);
-			cameraX = rotate*cameraX;
-			cameraY = rotate*cameraY;
-			cameraZ = rotate*cameraZ;
+	private:
+		void reset(){
+			cameraX = float3(1, 0, 0);
+			cameraY = float3(0, 1, 0);
+			cameraZ = float3(0, 0, 1);
+			cameraO = float3(0, 0, 0);
 			updateExtrinsic();
 		}
-		//rotate around x
-		void tilt(float angle){
-			Mat33f rotate = Mat33f::tilt(angle);
-			cameraX = rotate*cameraX;
-			cameraY = rotate*cameraY;
-			cameraZ = rotate*cameraZ;
-			updateExtrinsic();
+		void setFocalLength(float len){
+			focalLength = len;
+			vAov = ANGLE(atan(filmSize.y*0.5f / focalLength)) * 2;
+			canvaSize.x = fabs(filmSize.x * nearp / focalLength);
+			canvaSize.y = fabs(filmSize.y * nearp / focalLength);
+			updateIntrinsic();
 		}
-		//rotate around z
-		void roll(float angle){
-			Mat33f rotate = Mat33f::roll(angle);
-			cameraX = rotate*cameraX;
-			cameraY = rotate*cameraY;
-			cameraZ = rotate*cameraZ;
-			updateExtrinsic();
-		}
-		void translate(const float3& offset){
-			cameraO += offset;
-			updateExtrinsic();
-		}
-		void moveTo(const float3& pos){
-			cameraO = pos;
-			updateExtrinsic();
+		void setVAov(float angle/*rad*/){
+			vAov = ANGLE(angle);
+			focalLength = filmSize.height()*0.5f / tan(angle*0.5f);
+			canvaSize.x = fabs(filmSize.x * nearp / focalLength);
+			canvaSize.y = fabs(filmSize.y * nearp / focalLength);
+			updateIntrinsic();
 		}
 
 	public:
@@ -266,7 +311,8 @@ namespace redips{
 		float3 cameraX, cameraY, cameraZ, cameraO;
 	protected:
 		//float hAov;   //deprecated, horizontal angle of view
-		float vAov;    //vertical angle of view
+		float vAov;     //vertical angle of view
+		
 		float filmAspectRatio;
 		float imageAspectRatio;
 
@@ -274,28 +320,5 @@ namespace redips{
 		Mat44f camera2world4;
 		Mat44f world2camera;
 		Mat44f projection;
-	private:
-		void reset(){
-			cameraX = float3(1, 0, 0);
-			cameraY = float3(0, 1, 0);
-			cameraZ = float3(0, 0, 1);
-			cameraO = float3(0, 0, 0);
-			updateExtrinsic();
-		}
-
-		void setFocalLength(float len){
-			focalLength = len;
-			vAov = ANGLE(atan(filmSize.y*0.5f / focalLength)) * 2;
-			canvaSize.x = fabs(filmSize.x * nearp / focalLength);
-			canvaSize.y = fabs(filmSize.y * nearp / focalLength);
-			updateIntrinsic();
-		}
-		void setVAov(float angle/*rad*/){
-			vAov = ANGLE(angle);
-			focalLength = filmSize.height()*0.5f / tan(angle*0.5f);
-			canvaSize.x = fabs(filmSize.x * nearp / focalLength);
-			canvaSize.y = fabs(filmSize.y * nearp / focalLength);
-			updateIntrinsic();
-		}
 	};
 };
