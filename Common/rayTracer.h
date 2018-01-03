@@ -171,7 +171,7 @@ namespace redips{
 				}
 				
 				for (int i = 0; i < lights.size(); i++){
-					float3 lightDir = lights[i].pos - hitPoint;
+					float3 lightDir = lights[i].position - hitPoint;
 					Ray shadowRay(hitPoint + records.normal*1e-2, lightDir);
 					float len2Light = lightDir.length();
 					bool litted = true;
@@ -190,7 +190,7 @@ namespace redips{
 					}
 					if (litted){
 						float factor = (shadowRay.dir.dot(records.normal));
-						surfaceColor += diffuseColor*(MAX(0.0f, factor))*lights[i].color;
+						surfaceColor += diffuseColor*(MAX(0.0f, factor))*lights[i].intensity;
 					}
 				}
 			}

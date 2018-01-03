@@ -23,6 +23,7 @@ namespace redips{
 		bool operator !=(const Vec2<T>& another) const { return x != another.x || y != another.y; };
 
 		Vec2<T> operator/ (const Vec2& another) const{ return Vec2<T>(x / another.x, y / another.y); };
+		Vec2<T> operator/ (float v) const{ return Vec2<T>(x / v, y / v); };
 
 		Vec2<T> operator* (const T v) const { return Vec2<T>(x*v, y*v); };
 		Vec2<T> operator* (const Vec2<T> &v) const{ return Vec2<T>(x*v.x, y*v.y); };
@@ -85,6 +86,11 @@ namespace redips{
 
 		T& operator[] (std::size_t idx) { return *((&x) + idx); };
 		const T& operator[] (std::size_t idx) const { return *((&x) + idx); };
+
+		Vec3<T> operator/ (const Vec3<T>& another) const{ return Vec3<T>(x / another.x, y / another.y, z / another.z); };
+		Vec3<T> operator/= (const Vec3<T>& another) {x /= another.x, y /= another.y, z /= another.z; return *this;};
+		Vec3<T> operator/ (float v) const{ return Vec3<T>(x / v, y / v, z / v);};
+		Vec3<T> operator/= (float v) {x /= v, y /= v, z /= v; return *this;};
 
 		Vec3<T> operator^ (const Vec3<T> &v) const { return Vec3<T>((y*v.z - z*v.y), (z*v.x - x*v.z), (x*v.y - y*v.x)); };
 
@@ -172,8 +178,6 @@ namespace redips{
 
 		void setrow(const Vec3<T>& data, std::size_t idx){ for (int i = 0; i < 3; i++) m[idx][i] = data[i]; };
 		void setcol(const Vec3<T>& data, std::size_t idx){ for (int i = 0; i < 3; i++) m[i][idx] = data[i]; };
-
-
 
 		Mat33<T> transpose() const{ Mat33<T> ret;  for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) ret[i][j] = m[j][i];  return ret; }
 		static Mat33<T> eye(){ Mat33<T> ret;	for (int i = 0; i < 3; ++i) ret[i][i] = T(1); return ret; };

@@ -58,8 +58,6 @@ namespace redips{
 	private:
 		void build(int id, int spos, int cnt){
 			//printf("building %d : %d-%d\n",id,spos,spos+cnt);
-
-
 			gcnts[id] = cnt;
 			gspos[id] = spos;
 			if (cnt <= MAX_LEAF_SIZE) {

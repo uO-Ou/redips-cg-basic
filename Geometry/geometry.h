@@ -57,12 +57,12 @@ namespace redips{
 	class Light{
 	public:
 		Light(){
-			pos = float3{ 0.0f };
-			color = float3{ 1.0f, 1.0f, 1.0f };
+			position = float3(0.0f);
+			intensity = float3{ 1.0f, 1.0f, 1.0f };
 		}
-		Light(float3 pos, float3 color) :pos(pos), color(color){};
-		float3 pos;
-		float3 color;
+		Light(float3 pos, float3 color) :position(pos), intensity(color){};
+		float3 position;
+		float3 intensity;
 	};
 
 	class GeoUtil{
