@@ -20,8 +20,8 @@ namespace redips{
 		virtual ~Model(){};
 	public:
 		const Mat44f& Transform() const{ return transform; }
-		void Transform(const Mat44f& transform){
-			this->transform = transform;
+		void Transform(const Mat44f& transmat){
+			transform = transmat * transform;
 		}
 		//return bounding box after transformed
 		BOX aabb_T() const{

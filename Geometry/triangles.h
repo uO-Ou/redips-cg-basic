@@ -7,7 +7,6 @@
         c. several limits:
 			c.1. vt is 3-dimention
 			c.2. f can only has 3 format : withtex(a/b/c) withnormal(a//c) single(a)   
-		bug: f 8427//8428 8664//8665 8441//8442 8428//8429 
 */
 #pragma once
 #include "model.h"
@@ -44,6 +43,7 @@ namespace redips{
 		std::vector<FGroup> groups;
 	public:
 		Mesh(const char* file){
+			clean();
 			groups.push_back(FGroup("default", 0, 0));
 			int curGid = 0;
 			std::string basepath = ""; {
@@ -59,76 +59,113 @@ namespace redips{
 				std::cerr << "load obj file-" << file << " failed" << std::endl;
 				return;
 			}
-			puts("[mesh loader] : Loading...");  clock_t start, finish;  start = clock();
+			puts("[mesh loader] : Loading...");  
+			clock_t start = clock();
 
-			std::string curMtllib = "";
-			while (fin >> buff){
-				if (buff == "mtllib"){
-					fin >> curMtllib;
-					if (curMtllib[1] != ':'){ curMtllib = basepath + curMtllib; }
-					mtllib.load((curMtllib).c_str());
-				}
-				else if (buff == "v"){
-					fin >> floatx >> floaty >> floatz;
-					vertices.push_back(float3(floatx, floaty, floatz));
-				}
-				else if (buff == "vn"){
-					fin >> floatx >> floaty >> floatz;
-					normals.push_back(float3(floatx, floaty, floatz));
-				}
-				else if (buff == "vt"){
-					fin >> floatx >> floaty >> floatz;
-					texcoords.push_back(float3(floatx, floaty, floatz));
-				}
-				else if (buff == "usemtl"){
-					fin >> buff;
-					//put an end to last group
-					groups[curGid].faceCnt = faces_v.size() - groups[curGid].fsid;
-					//find material-id,new group
-					groups.push_back(FGroup(buff, faces_v.size(), mtllib.getMtlId(curMtllib, buff)));
-					curGid++;
-				}
-				else if (buff == "f"){
-					fin >> str1 >> str2 >> str3;
-					faceGroupId.push_back(curGid);
+			//load file to memory
+			auto _size = fin.seekg(0, std::ios::end).tellg();
+			char* _buf = new char[_size];
+			fin.seekg(0, std::ios::beg).read(_buf, static_cast<std::streamsize>(_size));
+			fin.close();
 
-					if (groups[curGid].faceType == GROUP_FACE_TYPE::_unknown_face_type_){
-						if (str1.find("//") != std::string::npos) groups[curGid].setType(GROUP_FACE_TYPE::_withnormal_);
-						else if (str1.find("/") != std::string::npos) groups[curGid].setType(GROUP_FACE_TYPE::_withtex_);
-						else groups[curGid].setType(GROUP_FACE_TYPE::_single_);
-						if (groups[curGid].hasNormals) groups[curGid].nsid = faces_vn.size();
-						if (groups[curGid].hasTexture) groups[curGid].tsid = faces_vt.size();
+			//parse obj file
+			{
+				std::stringstream sin(std::move(_buf));
+				std::string curMtllib = "";
+				char str[1024];
+				while (sin.getline(str,1024)){
+					if (STRING_UTIL.startwith(str,"v ")){
+						vertices.push_back(STRING_UTIL.split2Float3(str));
+						//sscanf_s(str + 2, "%f %f %f", &f3.x, &f3.y, &f3.z);
+						//vertices.push_back(f3);
 					}
-					switch (groups[curGid].faceType){
-					case GROUP_FACE_TYPE::_single_: {
-									   sscanf_s(str1.c_str(), "%d", v + 0);
-									   sscanf_s(str2.c_str(), "%d", v + 1);
-									   sscanf_s(str3.c_str(), "%d", v + 2);
-									   faces_v.push_back(int3(v[0] - 1, v[1] - 1, v[2] - 1));
+					else if (STRING_UTIL.startwith(str, "vn ")){
+						normals.push_back(STRING_UTIL.split2Float3(str));
+						//sscanf_s(str + 3, "%f %f %f", &f3.x, &f3.y, &f3.z);
+						//normals.push_back(f3);
+					}
+					else if (STRING_UTIL.startwith(str, "vt ")){
+						texcoords.push_back(STRING_UTIL.split2Float3(str));
+						//sscanf_s(str + 3, "%f %f %f", &f3.x, &f3.y, &f3.z);
+						//texcoords.push_back(f3);
+					}
+					else if (STRING_UTIL.startwith(str, "f ")){
+						faceGroupId.push_back(curGid);
+
+						std::vector<std::string> strs;
+						int strcnt = STRING_UTIL.split(str+2," ",strs);
+						if (strcnt == 3 || strcnt == 4){
+							if (groups[curGid].faceType == GROUP_FACE_TYPE::_unknown_face_type_){
+								if (strs[0].find("//") != std::string::npos) groups[curGid].setType(GROUP_FACE_TYPE::_withnormal_);
+								else if (strs[0].find("/") != std::string::npos) groups[curGid].setType(GROUP_FACE_TYPE::_withtex_);
+								else groups[curGid].setType(GROUP_FACE_TYPE::_single_);
+
+								if (groups[curGid].hasNormals) groups[curGid].nsid = faces_vn.size();
+								if (groups[curGid].hasTexture) groups[curGid].tsid = faces_vt.size();
+							}
+
+							if (strcnt == 4) faceGroupId.push_back(curGid);
+							switch (groups[curGid].faceType){
+								case GROUP_FACE_TYPE::_single_: {
+									   for (int ii = 0; ii < strcnt; ++ii) {
+									       sscanf_s(strs[ii].c_str(), "%d", v + ii);
+										   if (v[ii] < 0) v[ii] += vertices.size(); else v[ii]--;
+									   }
+									   faces_v.push_back(int3(v[0], v[1], v[2]));
+									   if (strcnt == 4) faces_v.push_back(int3(v[0], v[2], v[3]));
 									   break;
-					}
-					case GROUP_FACE_TYPE::_withnormal_:{
-										  sscanf_s(str1.c_str(), "%d//%d", v + 0, vn + 0);
-										  sscanf_s(str2.c_str(), "%d//%d", v + 1, vn + 1);
-										  sscanf_s(str3.c_str(), "%d//%d", v + 2, vn + 2);
-										  faces_v.push_back(int3(v[0] - 1, v[1] - 1, v[2] - 1));
-										  faces_vn.push_back(int3(vn[0] - 1, vn[1] - 1, vn[2] - 1));
-										  break;
-					}
-					case GROUP_FACE_TYPE::_withtex_:{
-									   sscanf_s(str1.c_str(), "%d/%d/%d", v + 0, vt + 0, vn + 0);
-									   sscanf_s(str2.c_str(), "%d/%d/%d", v + 1, vt + 1, vn + 1);
-									   sscanf_s(str3.c_str(), "%d/%d/%d", v + 2, vt + 2, vn + 2);
-									   faces_v.push_back(int3(v[0] - 1, v[1] - 1, v[2] - 1));
-									   faces_vt.push_back(int3(vt[0] - 1, vt[1] - 1, vt[2] - 1));
-									   faces_vn.push_back(int3(vn[0] - 1, vn[1] - 1, vn[2] - 1));
+								}
+								case GROUP_FACE_TYPE::_withnormal_:{
+									   for (int ii = 0; ii < strcnt; ++ii) {
+										   sscanf_s(strs[ii].c_str(), "%d//%d", v + ii, vn + ii);
+										   if (v[ii] < 0) v[ii] += vertices.size(); else v[ii]--;
+										   if (vn[ii] < 0) vn[ii] += normals.size(); else vn[ii]--;
+									   }
+									   faces_v.push_back(int3(v[0], v[1], v[2]));
+									   faces_vn.push_back(int3(vn[0], vn[1], vn[2]));
+									   if (strcnt == 4){
+										   faces_v.push_back(int3(v[0], v[2], v[3]));
+										   faces_vn.push_back(int3(vn[0], vn[2], vn[3]));
+									   }
 									   break;
+								}
+								case GROUP_FACE_TYPE::_withtex_:{
+									   for (int ii = 0; ii < strcnt; ++ii) {
+										   sscanf_s(strs[ii].c_str(), "%d/%d/%d", v + ii, vt + ii, vn + ii);
+										   if (v[ii] < 0) v[ii] += vertices.size(); else v[ii]--;
+										   if (vt[ii] < 0) vt[ii] += texcoords.size(); else vt[ii]--;
+										   if (vn[ii] < 0) vn[ii] += normals.size(); else vn[ii]--;
+									   }
+									   faces_v.push_back(int3(v[0], v[1], v[2]));
+									   faces_vt.push_back(int3(vt[0], vt[1], vt[2]));
+									   faces_vn.push_back(int3(vn[0], vn[1], vn[2]));
+									   if (strcnt == 4){
+										   faces_v.push_back(int3(v[0], v[2], v[3]));
+										   faces_vt.push_back(int3(vt[0], vt[2], vt[3]));
+										   faces_vn.push_back(int3(vn[0], vn[2], vn[3]));
+									   }
+									   break;
+								}
+							}
+						}
 					}
+					else if (STRING_UTIL.startwith(str, "usemtl ")){
+						auto buff = STRING_UTIL.trim(str + 7);
+						//put an end to last group
+						groups[curGid].faceCnt = faces_v.size() - groups[curGid].fsid;
+						//find material-id,new group
+						groups.push_back(FGroup(buff, faces_v.size(), mtllib.getMtlId(curMtllib, buff)));
+						curGid++;
+					}
+					else if (STRING_UTIL.startwith(str, "mtllib ")){
+						curMtllib = STRING_UTIL.trim(str + 7);
+						if (curMtllib[1] != ':'){ curMtllib = basepath + curMtllib; }
+						mtllib.load((curMtllib).c_str());
 					}
 				}
+				groups[groups.size() - 1].faceCnt = faces_v.size() - groups[groups.size() - 1].fsid;
 			}
-			groups[groups.size() - 1].faceCnt = faces_v.size() - groups[groups.size() - 1].fsid;
-			finish = clock();
+			clock_t finish = clock();
 			printf("[mesh loader] : load finish,cost %lf ms\n", (double)(finish - start) / CLOCKS_PER_SEC * 1000);
 			//std::cout << (*this);
 		}
@@ -137,10 +174,13 @@ namespace redips{
 			groups[0].setType(GROUP_FACE_TYPE::_withnormal_);
 		}
 		~Mesh(){
+			clean();
+		};
+		void clean(){
 			vertices.clear(); normals.clear(); texcoords.clear();
 			faces_v.clear(); faces_vn.clear(); faces_vt.clear(); faceGroupId.clear();
 			groups.clear();
-		};
+		}
 		const Material& getMaterial(int faceId) const{
 			return *mtllib[(groups[faceGroupId[faceId]].mtlId)];
 		}
@@ -169,10 +209,8 @@ namespace redips{
 		// face -> (faceGroupId) -> material-id in mtls&(vertices/normals/texcoords)
 		std::vector<int> faceGroupId;
 	private:
-		//buffer
-		float floatx, floaty, floatz;
-		int v[3], vn[3], vt[3];
-		std::string buff, str1, str2, str3;
+		int v[4], vn[4], vt[4];
+		redips::float3 f3;
 	};
 
 	class Triangles : public Model {

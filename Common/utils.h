@@ -4,12 +4,20 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+
+#include "./vec.h"
+
 namespace redips {
     class StringUtil{
     public:
 		static StringUtil& Instance(){ 
 			if (instance == nullptr) instance = new StringUtil();
 			return *instance; 
+		}
+		bool startwith(std::string s1,const char* s2){
+			int len = strlen(s2);
+			for (int i = 0; i < len; i++) if (s1[i] != s2[i]) return false;
+			return true;
 		}
 		explicit operator std::string(){ return std::string(strbuf); }
 		static int split(std::string str,std::string spliters,std::vector<std::string>& result){
@@ -26,6 +34,23 @@ namespace redips {
 			}
 			return result.size();
 		}
+		static float3 split2Float3(char* str){
+			//check if c is a num/./-/e/E
+			auto checker = [](char c){ return (c >= '0'&&c <= '9') || (c == '.') || (c == '-') || (c == 'e') || (c == 'E'); };
+
+			float3 value(0.0f);
+			int i, j; int fid = 0; int len = strlen(str);
+			for (i = 0; i < len; i = j){
+				j = i + 1;
+				if (checker(str[i])) {
+					while (checker(str[j])) j++;
+					str[j] = '\0';
+					value[fid++] = atof(str + i);
+				}
+			}
+			return value;
+		}
+		
 		//std::string&& str(){	return std::string(strbuf); }
 		std::string trim(){
 			return trim(std::string(strbuf));
