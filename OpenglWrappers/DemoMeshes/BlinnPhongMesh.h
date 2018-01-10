@@ -1,28 +1,28 @@
 /*
 * Author : redips redips.xin@gmail.com
 * Date : 2017.12.25
-* Description : glMeshWrapper with texture and light
+* Description : blinn-phong with texture
 */
 #pragma once
 #include "../glMeshWrapper.h"
 
 namespace redips{
-	class TexLightMesh : public redips::glMeshWrapper{
+	class BlinnPhongMesh : public redips::glMeshWrapper{
 	public:
-		TexLightMesh(const redips::Triangles* model, redips::ShaderSource shaderSource = redips::ShaderSource())
+		BlinnPhongMesh(const redips::Triangles* model, redips::ShaderSource shaderSource = redips::ShaderSource())
 			: glMeshWrapper(model, shaderSource){
 			bindVaoAttribData(0, 1, 2);
 			if (shaderSource.sourceType == redips::ShaderSource::SourceType::_null_){
 				char strbuf[512];
-				sprintf_s(strbuf, "%s/OpenglWrappers/DemoMeshes/texLight", _REDIPS_ROOT_PATH_);
+				sprintf_s(strbuf, "%s/OpenglWrappers/DemoMeshes/BlinnPhong", _REDIPS_ROOT_PATH_);
 				useShader(strbuf);
 			}
 		};
-		TexLightMesh(const glMeshWrapper& another, redips::ShaderSource shaderSource = redips::ShaderSource()) : glMeshWrapper(another, shaderSource){
+		BlinnPhongMesh(const glMeshWrapper& another, redips::ShaderSource shaderSource = redips::ShaderSource()) : glMeshWrapper(another, shaderSource){
 			bindVaoAttribData(0, 1, 2);
 			if (shaderSource.sourceType == redips::ShaderSource::SourceType::_null_){
 				char strbuf[512];
-				sprintf_s(strbuf, "%s/OpenglWrappers/DemoMeshes/texLight", _REDIPS_ROOT_PATH_);
+				sprintf_s(strbuf, "%s/OpenglWrappers/DemoMeshes/BlinnPhong", _REDIPS_ROOT_PATH_);
 				useShader(strbuf);
 			}
 		}
@@ -57,7 +57,7 @@ namespace redips{
 				glDrawArrays(GL_TRIANGLES, 0, 3 * meshFaceCnt[i]);
 			}
 		}
-		~TexLightMesh(){};
+		~BlinnPhongMesh(){};
 
 		const GLchar* shaderSurfaceTypeUniformStr = "surfaceType";
 		const GLchar* shaderAmbientColorUniformStr = "ambientColor";

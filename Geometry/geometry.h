@@ -56,13 +56,13 @@ namespace redips{
 
 	class Light{
 	public:
+		float3 position;
+		float3 intensity;
 		Light(){
 			position = float3(0.0f);
 			intensity = float3{ 1.0f, 1.0f, 1.0f };
 		}
 		Light(float3 pos, float3 color) :position(pos), intensity(color){};
-		float3 position;
-		float3 intensity;
 	};
 
 	class GeoUtil{
