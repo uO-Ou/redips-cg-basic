@@ -173,13 +173,14 @@ namespace redips{
 
 	class HitRecord{
 	public:
-		HitRecord() { reset(); }
+		HitRecord(float offset = 0.0f) : offset(offset) { reset(); }
 		void reset(){
 			distance = FLT_MAX;
 			hitIndex = -1;
 			color = float3(float(0));
 		}
 		float distance;
+		float offset;
 		float3 color;
 		float3 normal;
 		int hitIndex;

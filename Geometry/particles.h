@@ -53,7 +53,7 @@ namespace redips{
 			float tdist = FLT_MAX;
 			for (int i = 0; i < spheres.size(); i++){
 				if (ray.intersect((transform * float4(spheres[i], 1.0f)).vec3(), radius, tdist)){
-					if (tdist < record.distance){
+					if (tdist < record.distance && tdist>record.offset){
 						record.distance = tdist;
 						record.hitIndex = i;
 						hitted = true;

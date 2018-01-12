@@ -15,7 +15,7 @@ namespace redips{
 		GLenum Format,Type;
 		GL_TEXTURE_TYPE texture_type;
 	public:
-		operator GLuint(){	return texId;	}
+		operator GLuint() const{	return texId;	}
 		glTexture(){ texId = 0; };
 		~glTexture(){
 			destroy();

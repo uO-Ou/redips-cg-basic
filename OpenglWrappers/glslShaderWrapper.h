@@ -118,12 +118,15 @@ namespace redips{
 			return *this;
 		};
 		void uniformMat44f(const char* name, const float* value){
+			Use();
 			glUniformMatrix4fv(glGetUniformLocation(Program, name), 1, GL_FALSE, value);
 		}
 		void uniformFloat3(const char* name, const redips::float3& value){
+			Use();
 			glUniform3f(glGetUniformLocation(Program, name), value.x, value.y, value.z);
 		}
 		void uniformInt1(const char* name, int value){
+			Use();
 			glUniform1i(glGetUniformLocation(Program, name), value);
 		};
 	};

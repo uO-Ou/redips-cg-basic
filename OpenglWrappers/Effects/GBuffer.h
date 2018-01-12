@@ -1,11 +1,34 @@
 #pragma once
 #include "../../Common/vec.h"
 #include "../glTextureWrapper.h"
+#include "../glslShaderWrapper.h"
 
 namespace redips{
 	class GBuffer{
 	public:
 		enum class _GL_GBUFFER_TEXTURE_TYPE_ { _position_, _normal_, _albedo_spec_,_texture_cnt_ };
+		GLuint quardVao = 0, quardVbo = 0;
+		Shader deferredShader;
+		void useShader(redips::ShaderSource& source){
+			if (source.sourceType == ShaderSource::SourceType::_exists_program_){
+				deferredShader = Shader(source.value.program);
+			}
+			else if (source.sourceType == ShaderSource::SourceType::_from_file_){
+				deferredShader = Shader((std::string(source.value.path) + _vertex_shader_file_suffix_).c_str(), (std::string(source.value.path) + _fragment_shader_file_suffix_).c_str());
+			}
+		}
+		void bindTexture(int location, _GL_GBUFFER_TEXTURE_TYPE_ type, const char* samplerName){
+			glActiveTexture(GL_TEXTURE0+location);
+			glBindTexture(GL_TEXTURE_2D, getTexture(type));
+			deferredShader.uniformInt1(samplerName,location);
+		}
+		virtual void drawQuard(){
+			glBindVertexArray(quardVao);
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+			glBindVertexArray(0);
+
+			//this->copyZBuffer();
+		}
 	public:
 		void bind4Writing(){
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBuffer);
@@ -46,13 +69,25 @@ namespace redips{
 		}
 		GBuffer(int width,int height){
 			if (initialized = initialize(int2(width,height))){
+			    float data[] = { -1.0f, 1.0f, 0.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f };
+				glGenBuffers(1, &quardVbo);
+				glBindBuffer(GL_ARRAY_BUFFER, quardVbo);
+				glBufferData(GL_ARRAY_BUFFER, sizeof(data), &data, GL_STATIC_DRAW);
+					
+				glGenVertexArrays(1, &quardVao);
+				glBindVertexArray(quardVao);
+				glEnableVertexAttribArray(0);
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
 				puts("[gBuffer] : initialized !");
 			};
 		};
-		~GBuffer(){
+		virtual ~GBuffer(){
 			for (int i = 0; i < int(_GL_GBUFFER_TEXTURE_TYPE_::_texture_cnt_); i++) textures[i].destroy();
 			if (gBuffer) glDeleteFramebuffers(1,&gBuffer);
 			if (rboDepth) glDeleteRenderbuffers(1,&rboDepth);
+			glDeleteBuffers(1,&quardVbo);
+			glDeleteVertexArrays(1,&quardVao);
 		};
 	private:
 		bool initialize(int2 dim){

@@ -262,7 +262,7 @@ namespace redips{
 					float3 ab = (transform * float4(mesh->vertices[indices.y], 1.0f)).vec3() - a;
 					float3 ac = (transform * float4(mesh->vertices[indices.z], 1.0f)).vec3() - a;
 					float dist = ray.intersect(a, ab, ac);
-					if (dist>0 && dist < record.distance){
+					if (dist>record.offset && dist < record.distance){
 						record.hitIndex = i;
 						record.distance = dist;
 						record.normal = (ab^ac).unit();
@@ -374,7 +374,7 @@ namespace redips{
 					float3 edge1 = (transform*float4(vertices[face.y], 1.0)).vec3() - dota;
 					float3 edge2 = (transform*float4(vertices[face.z], 1.0)).vec3() - dota;
 					float dist = ray.intersect(dota, edge1, edge2);
-					if (dist>0){
+					if (dist>records.offset){
 						if (dist < records.distance){
 							records.distance = dist;
 							records.normal = (edge1 ^ edge2).unit();
