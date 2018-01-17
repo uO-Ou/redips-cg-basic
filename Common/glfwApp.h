@@ -194,11 +194,18 @@ namespace redips{
 			static void mouseCallback4phc(double xoffset, double yoffset){
 				xangle -= xoffset;
 				yangle -= yoffset;
-				auto rot = redips::Mat33f::pan(RAD(xangle)) * redips::Mat33f::tilt(RAD(yangle));
-				((redips::PhC*)bindedCamera)->cameraX = rot * redips::float3(1, 0, 0);
-				((redips::PhC*)bindedCamera)->cameraY = rot * redips::float3(0, 1, 0);
-				((redips::PhC*)bindedCamera)->cameraZ = rot * redips::float3(0, 0, 1);
-				((redips::PhC*)bindedCamera)->updateExtrinsic();
+				auto phcptr = ((redips::PhC*)bindedCamera);
+				//auto rot = redips::Mat33f::pan(RAD(xangle)) * redips::Mat33f::tilt(RAD(yangle));
+				//phcptr->cameraX = rot * redips::float3(1, 0, 0);
+				//phcptr->cameraY = rot * redips::float3(0, 1, 0);
+				//phcptr->cameraZ = rot * redips::float3(0, 0, 1);
+				//phcptr->updateExtrinsic();
+				
+				auto c2w = phcptr->c2w3()*redips::Mat33f::pan(RAD(-xoffset)) * redips::Mat33f::tilt(RAD(-yoffset));
+				phcptr->cameraX = c2w.col(0);
+				phcptr->cameraY = c2w.col(1);
+				phcptr->cameraZ = c2w.col(2);
+				phcptr->updateExtrinsic();
 			}
 			static void scrollCallback4phc(double offset){
 				((redips::PhC*)bindedCamera)->zoom(offset);

@@ -47,7 +47,7 @@ namespace redips{
 			return NULL;
 		}
 	public:
-		static bool saveImage(const BYTE* bytes, int width, int height, int bpp, const char* path){
+		static bool saveImage(const BYTE* bytes, int width, int height, int byte_per_pixel, const char* path){
 			FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 			fif = FreeImage_GetFileType(path);
 			if (fif == FIF_UNKNOWN){ fif = FreeImage_GetFIFFromFilename(path); }
@@ -56,15 +56,15 @@ namespace redips{
 			}
 			
 			const BYTE* bptr = bytes;
-			FIBITMAP* bitmap = FreeImage_Allocate(width, height, bpp*8, 8, 8, 8);
+			FIBITMAP* bitmap = FreeImage_Allocate(width, height, byte_per_pixel * 8, 8, 8, 8);
 			for (int y = 0; y < height; y++){
 				BYTE* bits = FreeImage_GetScanLine(bitmap, y);
-				for (int x = 0; x < width; x++, bits += bpp){
-					for (int i = 0; i < bpp; i++) {
-						bits[i] = bptr[x*bpp + i];
+				for (int x = 0; x < width; x++, bits += byte_per_pixel){
+					for (int i = 0; i < byte_per_pixel; i++) {
+						bits[i] = bptr[x*byte_per_pixel + i];
 					}
 				}
-				bptr += width * bpp;
+				bptr += width * byte_per_pixel;
 			}
 			bool bSuccess = FreeImage_Save(fif, bitmap, path, 0);
 			FreeImage_Unload(bitmap);

@@ -13,7 +13,7 @@ namespace redips{
 		GLuint readFBOId = 0;
 		int2 texsize, winsize; int bpp;
 		bool initialized = false;
-		glImageRender(int2 texsize, int bpp, int2 winsize) :texsize(texsize),bpp(bpp){
+		glImageRender(int2 texsize, int bits_per_pixel, int2 winsize) :texsize(texsize), bpp(bits_per_pixel){
 			if (this->winsize.x < 1) this->winsize = texsize; else this->winsize = winsize;
 			switch (bpp){
 			case   8: texture.create2d(texsize, GL_R8, GL_R, GL_UNSIGNED_BYTE, nullptr); break;
@@ -30,12 +30,12 @@ namespace redips{
 		static glImageRender* instance;
 	public:
 		void setWinsize(int2 winsize){ this->winsize = winsize; };
-		static glImageRender* getInstance(int2 texsize, int bpp, int2 winsize = int2(0, 0)){
-			if (instance == nullptr) instance = new glImageRender(texsize,bpp,winsize);
+		static glImageRender* getInstance(int2 texsize, int bits_per_pixel, int2 winsize = int2(0, 0)){
+			if (instance == nullptr) instance = new glImageRender(texsize, bits_per_pixel, winsize);
 			else{
-				if (texsize != instance->texsize || bpp != instance->bpp){
+				if (texsize != instance->texsize || bits_per_pixel != instance->bpp){
 					delete instance;
-					instance = new glImageRender(texsize, bpp, winsize);
+					instance = new glImageRender(texsize, bits_per_pixel, winsize);
 				}
 				else{
 					if (winsize.x < 1) winsize = texsize;

@@ -214,6 +214,8 @@ namespace redips{
 
 			fout << resolution.x << " " << resolution.y << endl;
 			fout.close();
+
+			std::cout << "[phc] : save camera parameters finished!" << endl;
 		}
 		void load(const char* file){
 			using namespace std;

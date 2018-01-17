@@ -59,7 +59,7 @@ namespace redips{
 			glBindFramebuffer(GL_FRAMEBUFFER, 0); 
 			//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
-		const glTexture& getTexture(_GL_GBUFFER_TEXTURE_TYPE_ type){
+		glTexture& getTexture(_GL_GBUFFER_TEXTURE_TYPE_ type){
 			if (int(type) < 0 || type >= (_GL_GBUFFER_TEXTURE_TYPE_::_texture_cnt_)){
 				glTexture nul;
 				puts("[gBuffer] : invalidate parameter"); 

@@ -7,7 +7,6 @@
 #include <GL/glew.h>
 #include "../Common/FImage.h"
 namespace redips{
-	
 	class glTexture{
 	public:
 		int3 dim;
@@ -20,7 +19,7 @@ namespace redips{
 		~glTexture(){
 			destroy();
 		}
-		void destroy(){
+		void destroy(){ 
 			if (texId) glDeleteTextures(1, &texId);
 		}
 
@@ -161,42 +160,90 @@ namespace redips{
 			return texId;
 		}
 
-		void save2disk(const char* file)const {
-			if (texture_type == GL_TEXTURE_TYPE::_2d_){
-				glBindTexture(GL_TEXTURE_2D, texId);
-				int cpp = 0;
-				switch (Format){
-				       case GL_RGBA: {  cpp = 4; break; }
-					   case GL_RGB: {  cpp = 3; break; }
-					   default: puts("[glTexture] : unsupported texture format, write to disk failed"); return;;
-				}
-				void* buffer;
-				if (Type == GL_FLOAT){ buffer = new float[cpp * dim.x*dim.y]; }
-				else if (Type == GL_UNSIGNED_BYTE){ buffer = new unsigned char[cpp * dim.x*dim.y];}
-				else { puts("[glTexture] : unsupported texture type, write to disk failed"); return;; };
-				
-				glGetTexImage(GL_TEXTURE_2D, 0, Format, Type, buffer);
-				
+		void save2disk(const char* file) {
+			int4 flags;
+			if (map(flags)){
 				std::ofstream fout(file);
-				fout <<dim.y<<" "<<dim.x<<" "<<cpp<<std::endl;
+				fout << flags.y << " " << flags.x << " " << flags.z << std::endl;
 				if (Type == GL_FLOAT){
 					for (int y = 0; y < dim.y; y++) {
 						for (int x = 0; x < dim.x; x++) {
-							//fout << "["; 
-							for (int i = 0; i < cpp; i++) 
-								fout << ((float*)buffer)[y*dim.x*cpp + x*cpp + i]<<" "; 
-							//fout << "] ";
+							for (int i = 0; i < flags.z; i++)
+								fout << ((float*)buffer)[y*dim.x*flags.z + x*flags.z + i] << " ";
 						}
 						fout << std::endl;
 					}
 				}
 				else{
-					puts("[glTexture] : dont support int");
+					puts("[glTexture] : dont support uchar");
 				}
 				fout.close();
-
-				glBindTexture(GL_TEXTURE_2D, 0);
 				puts("[glTexture] : write texture to disk finish");
+				unmap();
+			}
+			else{
+				puts("[glTexture] : write texture to disk failed");
+			}
+		}
+		
+		//if a texture mapped twice or more,[map] operation only allocate one block of memory.
+		void* map(int4& flags){
+			if (buffer) {
+				//delete buffer;
+				//buffer = nullptr;
+				flags.x = dim.x;
+				flags.y = dim.y;
+				switch (Format){
+					case GL_RGBA: {  flags.z = 4; break; }
+					case GL_RGB: {  flags.z = 3; break; }
+					default: { flags.z = 0; return nullptr; }
+				}
+				if (Type == GL_FLOAT){
+					flags.w = 0;
+				}
+				else if (Type == GL_UNSIGNED_BYTE){
+					flags.w = 1;
+				}
+				buffer_visitor++;
+				return buffer;
+			}
+			if (texture_type == GL_TEXTURE_TYPE::_2d_){
+				int cpp = 0;
+				switch (Format){
+					case GL_RGBA: {  cpp = 4; break; }
+					case GL_RGB: {  cpp = 3; break; }
+					default: puts("[glTexture] : unsupported texture format, map failed"); return nullptr;
+				}
+
+				if (Type == GL_FLOAT){ 
+					flags.w = 0;
+					buffer = new float[cpp * dim.x*dim.y]; 
+					buffer_visitor = 1;
+				}
+				else if (Type == GL_UNSIGNED_BYTE){ 
+					flags.w = 1;
+					buffer = new unsigned char[cpp * dim.x*dim.y]; 
+					buffer_visitor = 1;
+				}
+				else { puts("[glTexture] : unsupported texture type, map failed"); return nullptr; };
+
+				glBindTexture(GL_TEXTURE_2D, texId);
+				glGetTexImage(GL_TEXTURE_2D, 0, Format, Type, buffer);
+				glBindTexture(GL_TEXTURE_2D, 0);
+
+				flags.x = dim.x;
+				flags.y = dim.y;
+				flags.z = cpp;
+			}
+			else{
+			
+			}
+			return buffer;
+		}
+		void unmap(){
+			if ((--buffer_visitor) <= 0){
+				delete buffer;
+				buffer = nullptr;
 			}
 		}
 
@@ -226,5 +273,7 @@ namespace redips{
 		}
 	private:
 		GLuint texId;
+		void* buffer = nullptr;
+		int buffer_visitor = 0;
 	};
 };
