@@ -34,7 +34,7 @@ namespace redips{
 		static bool firstMouse = true;
 		static bool enableMouse = true;
 		static float xangle = 0, yangle = 0;  // for camera's Euler angles
-		static double lastX = 256, lastY = 256, mouSensitivity = 0.02, scrollSensitivity = 0.1f, keyboardSensitivity = 0.1f;
+		static double lastX = 256, lastY = 256, mouSensitivity = 0.02, scrollSensitivity = 0.1f, keyboardSensitivity = 0.05f;
 
 		//a camera binded to current window
 		static Camera *bindedCamera = nullptr;
@@ -43,7 +43,7 @@ namespace redips{
 		static void(*displayCallback)() = nullptr;
 		static void(*mouseCallback)(double, double) = nullptr;
 		static void(*scrollCallback)(double) = nullptr;
-
+		static void(*mouseClickCallback)(int) = nullptr;
 		static char strbuf[512], windowTitle[256];
 
 		class App{
@@ -88,6 +88,9 @@ namespace redips{
 			void registerMouseCallback(void(*func)(double, double)){
 				mouseCallback = func;
 			}
+			void registerMouseClickCallback(void(*func)(int)){
+				mouseClickCallback = func;
+			}
 			void registerScrollCallback(void(*func)(double)){
 				scrollCallback = func;
 			}
@@ -127,8 +130,9 @@ namespace redips{
 				glfwSetKeyCallback(window, key_callback);
 				glfwSetScrollCallback(window, scroll_callback);
 				glfwSetCursorPosCallback(window, mouse_callback);
+				glfwSetMouseButtonCallback(window, mouse_click_callback);
 				// Options
-				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 				// Initialize GLEW to setup the OpenGL Function pointers
 				glewExperimental = GL_TRUE;
@@ -172,14 +176,38 @@ namespace redips{
 				lastY = ypos;
 
 				if (mouseCallback){
-					mouseCallback(xoffset*mouSensitivity, yoffset*mouSensitivity);
+					mouseCallback(xpos,ypos);
 				}
-				if (bindedCamera){
+				else if (bindedCamera){
 					if (bindedCamera->type == CAMERA_TYPE::_phc_){
 						mouseCallback4phc(xoffset*mouSensitivity, yoffset*mouSensitivity);
 					}
 				}
 			}
+
+			static void mouse_click_callback(GLFWwindow* window, int button, int action, int mods){
+				if (action == GLFW_PRESS){
+					if (mouseClickCallback) 
+						mouseClickCallback(button);
+					else{
+						switch (button){
+						case GLFW_MOUSE_BUTTON_LEFT:
+							puts("Mosue left button clicked!");
+							break;
+						case GLFW_MOUSE_BUTTON_MIDDLE:
+							puts("Mosue middle button clicked!");
+							break;
+						case GLFW_MOUSE_BUTTON_RIGHT:
+							puts("Mosue right button clicked!");
+							break;
+						default:
+							return;
+						}
+					}
+					return;
+				}
+			}
+
 			static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
 				if (scrollCallback){
 					scrollCallback(yoffset*scrollSensitivity);
@@ -195,17 +223,20 @@ namespace redips{
 				xangle -= xoffset;
 				yangle -= yoffset;
 				auto phcptr = ((redips::PhC*)bindedCamera);
-				//auto rot = redips::Mat33f::pan(RAD(xangle)) * redips::Mat33f::tilt(RAD(yangle));
-				//phcptr->cameraX = rot * redips::float3(1, 0, 0);
-				//phcptr->cameraY = rot * redips::float3(0, 1, 0);
-				//phcptr->cameraZ = rot * redips::float3(0, 0, 1);
-				//phcptr->updateExtrinsic();
-				
-				auto c2w = phcptr->c2w3()*redips::Mat33f::pan(RAD(-xoffset)) * redips::Mat33f::tilt(RAD(-yoffset));
+				/*******************	1	********************
+				auto rot = redips::Mat33f::pan(RAD(xangle)) * redips::Mat33f::tilt(RAD(yangle));
+				phcptr->cameraX = rot * redips::float3(1, 0, 0);
+				phcptr->cameraY = rot * redips::float3(0, 1, 0);
+				phcptr->cameraZ = rot * redips::float3(0, 0, 1);
+				phcptr->updateExtrinsic();
+				/***********************************************/
+				/*******************	2	********************/
+				auto c2w = phcptr->c2w3()*redips::Mat33f::pan(RAD(xoffset)) * redips::Mat33f::tilt(RAD(-yoffset));
 				phcptr->cameraX = c2w.col(0);
 				phcptr->cameraY = c2w.col(1);
 				phcptr->cameraZ = c2w.col(2);
 				phcptr->updateExtrinsic();
+				/***********************************************/
 			}
 			static void scrollCallback4phc(double offset){
 				((redips::PhC*)bindedCamera)->zoom(offset);

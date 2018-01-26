@@ -15,7 +15,7 @@ namespace redips{
 	public:
 		RayTracer(){
 			bgColor = float3(0.88f, 0.99f, 0.99f);
-			MAX_RAYTRACE_DEPTH = 1;
+			MAX_RAYTRACE_DEPTH = 3;
 		};
 		~RayTracer(){
 			delete imgbuf;
@@ -42,23 +42,27 @@ namespace redips{
 			}
 			int bpp = (imgbpp >> 3);
 			clock_t start = clock();
-			HitRecord records;
+			
 			if (camera.type == CAMERA_TYPE::_phc_){
-				for (int x = 0; x < imgwidth; x++) for (int y = 0; y < imgheight; y++){
-					records.reset();
-					trace(1, camera.getRay(x, y), records);
-					if (records.color.x>1) records.color.x = 1;
-					if (records.color.y>1) records.color.y = 1;
-					if (records.color.z>1) records.color.z = 1;
-					imgbuf[(y*imgwidth + x) * bpp + 0] = records.color.z * 255;
-					imgbuf[(y*imgwidth + x) * bpp + 1] = records.color.y * 255;
-					imgbuf[(y*imgwidth + x) * bpp + 2] = records.color.x * 255;
+				#pragma omp parallel for
+				for (int x = 0; x < imgwidth; x++) {
+					#pragma omp parallel for
+					for (int y = 0; y < imgheight; y++){
+						HitRecord records;
+						trace(1, camera.getRay(x, y), records);
+						if (records.color.x>1) records.color.x = 1;
+						if (records.color.y>1) records.color.y = 1;
+						if (records.color.z > 1) records.color.z = 1;
+						imgbuf[(y*imgwidth + x) * bpp + 0] = records.color.z * 255;
+						imgbuf[(y*imgwidth + x) * bpp + 1] = records.color.y * 255;
+						imgbuf[(y*imgwidth + x) * bpp + 2] = records.color.x * 255;
+					}
 				}
 			}
 			else if (camera.type == CAMERA_TYPE::_mpc_){
 				const MPC& mpc = dynamic_cast<const MPC&>(camera);
 				for (int x = 0; x < imgwidth; x++) for (int y = 0; y < imgheight; y++){
-					records.reset();
+					HitRecord records;
 					//in transition region
 					if (abs(x-imgwidth/2)<mpc.tpanel.x/2&&abs(y-imgheight/2)<mpc.tpanel.y/2){
 						float3 spoint((x*1.0/mpc.resolution.x-0.5f)*mpc.canvaSize.x,(y*1.0/mpc.resolution.y-0.5f)*mpc.canvaSize.y,mpc.nearp);
@@ -135,7 +139,7 @@ namespace redips{
 		void trace(int depth, const Ray &ray, HitRecord& records){
 			//a.check if intersect with scene
 			int hitId = -1;
-			for (int i = 0; i < objects.size(); i++){
+			for (int i = 0; i < objects.size(); ++i){
 				if (objects[i]->intersect(ray, records)){
 					hitId = i;
 				}
@@ -146,30 +150,37 @@ namespace redips{
 				return;
 			}
 
-			//get hitted material
-			const Material &mtl = objects[hitId]->getMaterial(records.hitIndex);
-
 			float3 hitPoint = ray.ori + ray.dir * records.distance;
+			
 			//b. check if ray inside object
 			bool inside = false;
 			if (ray.dir.dot(records.normal)>0){
 				records.normal = records.normal * (-1);
 				inside = true;
 			}
-			
+
+			//get hitted material
+			const Material &mtl = objects[hitId]->getMaterial(records.hitIndex);
+
 			float3 surfaceColor(0.0f);
 			float3 ambientColor = mtl.ambient;
+			float3 diffuseColor = mtl.diffuse;
+			float3 texcoord = objects[hitId]->texcoord(records.hitIndex, hitPoint);
+			if (texcoord.z > 0){
+				if (mtl.texture_kd) diffuseColor = mtl.tex_diffuse(texcoord.x, texcoord.y);
+				if (mtl.texture_ka) ambientColor = mtl.tex_ambient(texcoord.x, texcoord.y);
+			}
+
 			if ((depth < MAX_RAYTRACE_DEPTH) && (mtl.specular.length()>0)){
 				//sendout a new ray
+				float facingRatio = -ray.dir.dot(records.normal);
+				float fresnelEffect = MIX(pow(1-facingRatio,4),1,0.2);
+				float3 reflectDir = ray.dir + records.normal * (-2 * ray.dir.dot(records.normal));
+				HitRecord reflect; 
+				trace(depth + 1, Ray(hitPoint, reflectDir), reflect);
+				surfaceColor = reflect.color * fresnelEffect * diffuseColor;
 			}
 			else{
-				float3 diffuseColor = mtl.diffuse;
-				float3 texcoord = objects[hitId]->texcoord(records.hitIndex, hitPoint);
-				if (texcoord.z > 0){ 
-					if (mtl.texture_kd) diffuseColor = mtl.tex_diffuse(texcoord.x, texcoord.y);
-					if (mtl.texture_ka) ambientColor = mtl.tex_ambient(texcoord.x, texcoord.y);
-				}
-				
 				for (int i = 0; i < lights.size(); i++){
 					float3 lightDir = lights[i].position - hitPoint;
 					Ray shadowRay(hitPoint + records.normal*1e-2, lightDir);

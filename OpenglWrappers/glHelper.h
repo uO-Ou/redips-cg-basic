@@ -13,36 +13,20 @@ namespace redips{
 		GLuint readFBOId = 0;
 		int2 texsize, winsize; int bpp;
 		bool initialized = false;
-		glImageRender(int2 texsize, int bits_per_pixel, int2 winsize) :texsize(texsize), bpp(bits_per_pixel){
+	public:
+		glImageRender(int2 texsize, int bits_per_pixel, int2 winsize = int2(0, 0)) :texsize(texsize), bpp(bits_per_pixel){
 			if (this->winsize.x < 1) this->winsize = texsize; else this->winsize = winsize;
 			switch (bpp){
-			case   8: texture.create2d(texsize, GL_R8, GL_R, GL_UNSIGNED_BYTE, nullptr); break;
-			case 24: texture.create2d(texsize, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, nullptr); break;
-			case 32: texture.create2d(texsize, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, nullptr); break;
-			default: {printf("[glImageRender] : error! doesnt support bpp is %d\n", bpp); return; };
+				case   8: texture.create2d(texsize, GL_R8, GL_R, GL_UNSIGNED_BYTE, nullptr); break;
+				case 24: texture.create2d(texsize, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, nullptr); break;
+				case 32: texture.create2d(texsize, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, nullptr); break;
+				default: {printf("[glImageRender] : error! doesnt support bpp is %d\n", bpp); return; };
 			}
 			glGenFramebuffers(1, &readFBOId);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, readFBOId);
 			glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			initialized = true;
-		}
-		static glImageRender* instance;
-	public:
-		void setWinsize(int2 winsize){ this->winsize = winsize; };
-		static glImageRender* getInstance(int2 texsize, int bits_per_pixel, int2 winsize = int2(0, 0)){
-			if (instance == nullptr) instance = new glImageRender(texsize, bits_per_pixel, winsize);
-			else{
-				if (texsize != instance->texsize || bits_per_pixel != instance->bpp){
-					delete instance;
-					instance = new glImageRender(texsize, bits_per_pixel, winsize);
-				}
-				else{
-					if (winsize.x < 1) winsize = texsize;
-					if (winsize != instance->winsize) instance->setWinsize(winsize);
-				}
-			}
-			return instance;
 		}
 		~glImageRender(){ 
 			if (readFBOId) glDeleteFramebuffers(1, &readFBOId);
@@ -55,7 +39,6 @@ namespace redips{
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 		}
 	};
-	glImageRender* glImageRender::instance = nullptr;
 
 	//save current frame to a picture
 	class glScreenCapture{

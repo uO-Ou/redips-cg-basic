@@ -311,7 +311,7 @@ namespace redips{
 
 		//in world coordinates;
 		float3 cameraX, cameraY, cameraZ, cameraO;
-	protected:
+	public:
 		//float hAov;   //deprecated, horizontal angle of view
 		float vAov;     //vertical angle of view
 		

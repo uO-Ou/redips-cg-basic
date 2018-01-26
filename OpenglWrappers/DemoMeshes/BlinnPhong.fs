@@ -19,8 +19,8 @@ uniform sampler2D ambientTexture;
 const float M = 16.0f;
 const float SpecularStrength = 0.5f;
 const float SC = 1.0f;
-const float SL = 0.0004;
-const float SQ = 0.0001;
+const float SL = 0.00004;
+const float SQ = 0.00001;
 
 void main(){
     // Attenuation
