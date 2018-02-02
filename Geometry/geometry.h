@@ -58,11 +58,16 @@ namespace redips{
 	public:
 		float3 position;
 		float3 intensity;
+		float3 attenuation_coef;
 		Light(){
 			position = float3(0.0f);
 			intensity = float3{ 1.0f, 1.0f, 1.0f };
+			attenuation_coef = float3(1.0f, 10.0f, 10.0f);
 		}
-		Light(float3 pos, float3 color) :position(pos), intensity(color){};
+		Light(float3 pos, float3 color, float3 attenuation_coef = float3(1.0f, 10.0f, 100.0f)) :position(pos), intensity(color), attenuation_coef(attenuation_coef){};
+		float attenuation(float dist){
+			return 1.0f / (attenuation_coef.dot(float3(1, dist, dist*dist)));
+		}
 	};
 
 	class GeoUtil{

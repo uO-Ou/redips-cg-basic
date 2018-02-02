@@ -34,7 +34,7 @@ namespace redips{
 		static bool firstMouse = true;
 		static bool enableMouse = true;
 		static float xangle = 0, yangle = 0;  // for camera's Euler angles
-		static double lastX = 256, lastY = 256, mouSensitivity = 0.02, scrollSensitivity = 0.1f, keyboardSensitivity = 0.05f;
+		static double lastX = 256, lastY = 256, mouSensitivity = 0.05, scrollSensitivity = 0.1f, keyboardSensitivity = 2;
 
 		//a camera binded to current window
 		static Camera *bindedCamera = nullptr;
@@ -132,7 +132,8 @@ namespace redips{
 				glfwSetCursorPosCallback(window, mouse_callback);
 				glfwSetMouseButtonCallback(window, mouse_click_callback);
 				// Options
-				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 				// Initialize GLEW to setup the OpenGL Function pointers
 				glewExperimental = GL_TRUE;
@@ -223,14 +224,14 @@ namespace redips{
 				xangle -= xoffset;
 				yangle -= yoffset;
 				auto phcptr = ((redips::PhC*)bindedCamera);
-				/*******************	1	********************
+				/*******************	1	********************/
 				auto rot = redips::Mat33f::pan(RAD(xangle)) * redips::Mat33f::tilt(RAD(yangle));
 				phcptr->cameraX = rot * redips::float3(1, 0, 0);
 				phcptr->cameraY = rot * redips::float3(0, 1, 0);
 				phcptr->cameraZ = rot * redips::float3(0, 0, 1);
 				phcptr->updateExtrinsic();
 				/***********************************************/
-				/*******************	2	********************/
+				/*******************	2	********************
 				auto c2w = phcptr->c2w3()*redips::Mat33f::pan(RAD(xoffset)) * redips::Mat33f::tilt(RAD(-yoffset));
 				phcptr->cameraX = c2w.col(0);
 				phcptr->cameraY = c2w.col(1);
