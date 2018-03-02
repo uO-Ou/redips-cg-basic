@@ -134,7 +134,7 @@ namespace redips{
 			projection[2][3] = farp*nearp * 2 / (farp - nearp);
 			projection[3][2] = -1;
 		}
-		void updateExtrinsic(){
+		virtual void updateExtrinsic(){
 			//update camera-to-world-matrix
 			camera2world4.setcol(float4(cameraX, 0.0f), 0);
 			camera2world4.setcol(float4(cameraY, 0.0f), 1);

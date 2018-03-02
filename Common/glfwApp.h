@@ -34,7 +34,7 @@ namespace redips{
 		static bool firstMouse = true;
 		static bool enableMouse = true;
 		static float xangle = 0, yangle = 0;  // for camera's Euler angles
-		static double lastX = 256, lastY = 256, mouSensitivity = 0.05, scrollSensitivity = 0.1f, keyboardSensitivity = 2;
+		static double lastX = 256, lastY = 256, mouSensitivity = 0.05, scrollSensitivity = 0.1f, keyboardSensitivity = 0.2;
 
 		//a camera binded to current window
 		static Camera *bindedCamera = nullptr;
@@ -125,7 +125,7 @@ namespace redips{
 
 				window = glfwCreateWindow(win_width, win_height, title, nullptr, nullptr); // Windowed
 				glfwMakeContextCurrent(window);
-
+			
 				// Set the required callback functions
 				glfwSetKeyCallback(window, key_callback);
 				glfwSetScrollCallback(window, scroll_callback);
@@ -142,9 +142,9 @@ namespace redips{
 				// Define the viewport dimensions
 				glViewport(0, 0, win_width, win_height);
 				glEnable(GL_DEPTH_TEST);
-				//glClearColor(0.88f, 0.99f, 0.99f, 1.0f);
+				glClearColor(0.88f, 0.99f, 0.99f, 1.0f);
 				//glClearColor(0.27f, 0.55f, 0.52f, 1.0f);
-				glClearColor(0.0f,0.0f,0.0f,1.0f);
+				//glClearColor(0.0f,0.0f,0.0f,1.0f);
 
 				CHECK_GL_ERROR("opengl-environment setup failed");
 			};

@@ -60,7 +60,7 @@ namespace redips{
 			for (int y = 0; y < height; y++){
 				BYTE* bits = FreeImage_GetScanLine(bitmap, y);
 				for (int x = 0; x < width; x++, bits += byte_per_pixel){
-					for (int i = 0; i < byte_per_pixel; i++) {
+					for (int i = 0; i < byte_per_pixel; ++i) {
 						bits[i] = bptr[x*byte_per_pixel + i];
 					}
 				}

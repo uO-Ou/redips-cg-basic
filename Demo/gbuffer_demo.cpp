@@ -24,9 +24,6 @@ void display(){
 	using namespace redips;
 	gbuffer.bind4Writing();
 
-	mesh.uniformFloat3("lightColor", redips::float3(1, 1, 1));
-	mesh.uniformFloat3("lightPos", phc.pos());
-	mesh.uniformFloat3("cameraPos", phc.pos());
 	mesh.uniformMat44f("view", phc.glView().ptr());
 	mesh.uniformMat44f("projection", phc.glProjection().ptr());
 	mesh.uniformMat44f("model", redips::Mat44f::scale(1.0f).transpose().ptr());

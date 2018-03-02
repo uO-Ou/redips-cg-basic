@@ -22,7 +22,7 @@ namespace redips{
 		}
 		void release(){
 			//for (auto module : modules) delete module.second;
-			for (auto dptr : devptrs)	cuMemFree(dptr.second);
+			for (auto dptr : devptrs) cuMemFree(dptr.second);
 			devptrs.clear();
 			modules.clear();
 			cuCtxDestroy(context);
@@ -70,7 +70,7 @@ namespace redips{
 		virtual ~Cuder(){ release();	};
 		
 	public:
-		bool launch(dim3 gridDim, dim3 blockDim, std::string module, std::string kernel_function, std::initializer_list<ValueHolder> params){
+		bool launch(dim3 gridDim, dim3 blockDim, size_t sharedMemSize, std::string module, std::string kernel_function, std::initializer_list<ValueHolder> params){
 			//get kernel address
 			if (!modules.count(module)){
 				std::cerr << "[Cuder] : error: doesn't exists an module named " << module << std::endl; return false;
@@ -98,7 +98,7 @@ namespace redips{
 			cudaEventCreate(&stop);
 			cudaEventRecord(start, 0);
 
-			bool result = (CUDA_SUCCESS == cuLaunchKernel(kernel_addr,/* grid dim */gridDim.x, gridDim.y, gridDim.z, /* block dim */blockDim.x, blockDim.y, blockDim.z, /* shared mem, stream */ 0, 0, &pamary[0], /* arguments */0));
+			bool result = (CUDA_SUCCESS == cuLaunchKernel(kernel_addr,/* grid dim */gridDim.x, gridDim.y, gridDim.z, /* block dim */blockDim.x, blockDim.y, blockDim.z, /* shared mem, stream */ sharedMemSize, 0, &pamary[0], /* arguments */0));
 			cuCtxSynchronize();
 
 			cudaEventRecord(stop, 0);
