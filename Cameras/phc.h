@@ -213,6 +213,7 @@ namespace redips{
 			fout << filmSize.x << " " << filmSize.y << endl;
 
 			fout << resolution.x << " " << resolution.y << endl;
+			fout << vAov << endl;
 			fout.close();
 
 			std::cout << "[phc] : save camera parameters finished!" << endl;

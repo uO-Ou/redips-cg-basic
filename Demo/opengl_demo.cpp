@@ -10,6 +10,7 @@ redips::PhC phc(60, 1.0f, 1.0f, 10000);
 //load a obj and then wrap into a glMesh。
 redips::BlinnPhongMesh mesh(new redips::Triangles("E:/Documents/models/maze_with_dragon.obj"));
 
+//deal with keyboard event and others
 void movement(){
 	if (application->keydown(GLFW_KEY_F))
 		application->showFps(false);
@@ -31,7 +32,7 @@ void display(){
 void initialize(){
 	//mesh center
 	redips::float3 heart = mesh.model_ptr()->aabb_T().heart();
-	//set up camera
+	//setup camera
 	phc.lookAt(heart + redips::float3(0, 0, 200), heart, redips::float3(0, 1, 0));
 }
 

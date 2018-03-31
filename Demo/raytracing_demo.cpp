@@ -9,7 +9,7 @@
 auto application = redips::glfw::getInstance(WINWIDTH, WINHEIGHT);
 
 //raytracer
-auto rayTracer = new redips::RayTracer(WINWIDTH, WINHEIGHT);
+auto rayTracer = new redips::RayTracer();
 
 //create a imageRender to render rayTracer's result
 auto imageRender = redips::glImageRender::getInstance(redips::int2(rayTracer->imgwidth, rayTracer->imgheight), rayTracer->imgbpp);

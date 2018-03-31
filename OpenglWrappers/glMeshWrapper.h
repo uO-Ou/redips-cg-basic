@@ -6,6 +6,8 @@
 		   if option & 2 == 1, generate geometry normal, else use normal from obj file
 		   if option & 4 == 1, generate mipmap texture
 		b. when delete a glMeshWrapper, release vbo/textures if only its' visitorCnt<=0 
+
+bug: row 63,what if a .mtl has noused mtl
 */
 #pragma once
 #include "glTextureWrapper.h"

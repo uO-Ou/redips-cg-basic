@@ -19,8 +19,8 @@ uniform sampler2D ambientTexture;
 const float M = 16.0f;
 const float SpecularStrength = 0.5f;
 const float SC = 1.0f;
-const float SL = 0.00004;
-const float SQ = 0.00001;
+const float SL = 0.000000004;
+const float SQ = 0.0000000001;
 
 void main(){
     // Attenuation
@@ -46,5 +46,6 @@ void main(){
         diffuse *= (texture(diffuseTexture,TexCoord).bgr * diffuseColor);
     else diffuse *= diffuseColor;
 
-	  color = vec4(ambient+diffuse+specular,1.0f);
+	color = vec4(ambient+diffuse+specular,1.0f);
+	//color = vec4(0,0,0,1);
 }
