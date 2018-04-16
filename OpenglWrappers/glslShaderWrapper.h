@@ -129,6 +129,11 @@ namespace redips{
 			Use();
 			glUniform1i(glGetUniformLocation(Program, name), value);
 		};
+		void uniformFloat1(const char* name, float value){
+			Use();
+			glUniform1f(glGetUniformLocation(Program, name), value);
+		}
+
 	};
 
 	class ShaderManager{

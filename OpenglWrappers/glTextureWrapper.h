@@ -196,6 +196,7 @@ namespace redips{
 				switch (Format){
 					case GL_RGBA: {  flags.z = 4; break; }
 					case GL_RGB: {  flags.z = 3; break; }
+					case GL_DEPTH_COMPONENT:{flags.z = 1; break; };
 					default: { flags.z = 0; return nullptr; }
 				}
 				if (Type == GL_FLOAT){
@@ -212,6 +213,7 @@ namespace redips{
 				switch (Format){
 					case GL_RGBA: {  cpp = 4; break; }
 					case GL_RGB: {  cpp = 3; break; }
+					case GL_DEPTH_COMPONENT:{cpp = 1; break; };
 					default: puts("[glTexture] : unsupported texture format, map failed"); return nullptr;
 				}
 

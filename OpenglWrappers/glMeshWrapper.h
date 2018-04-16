@@ -218,6 +218,10 @@ namespace redips{
 			m_shader->Use();
 			glUniform3f(glGetUniformLocation(m_shader->Program, name), value.x, value.y, value.z);
 		}
+		void uniformFloat1(const char* name, float value){
+			m_shader->Use();
+			glUniform1f(glGetUniformLocation(m_shader->Program, name), value);
+		}
 		void uniformInt1(const char* name, int value){ 
 			m_shader->Use();
 			glUniform1i(glGetUniformLocation(m_shader->Program, name), value); 

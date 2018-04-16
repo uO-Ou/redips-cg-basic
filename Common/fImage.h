@@ -56,7 +56,7 @@ namespace redips{
 			}
 			
 			const BYTE* bptr = bytes;
-			FIBITMAP* bitmap = FreeImage_Allocate(width, height, byte_per_pixel * 8, 8, 8, 8);
+			FIBITMAP* bitmap = FreeImage_Allocate(width, height, byte_per_pixel * 8, byte_per_pixel>2 ? 8 : 0, byte_per_pixel>2 ? 8 : 0, byte_per_pixel>2 ? 8 : 0);
 			for (int y = 0; y < height; y++){
 				BYTE* bits = FreeImage_GetScanLine(bitmap, y);
 				for (int x = 0; x < width; x++, bits += byte_per_pixel){

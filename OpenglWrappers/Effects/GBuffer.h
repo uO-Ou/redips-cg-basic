@@ -30,6 +30,7 @@ namespace redips{
 			//this->copyZBuffer();
 		}
 	public:
+		GLuint Id() const { return gBuffer; }
 		void bind4Writing(){
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gBuffer);
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

@@ -34,11 +34,10 @@ namespace redips{
 		static bool firstMouse = true;
 		static bool enableMouse = true;
 		static float xangle = 0, yangle = 0;  // for camera's Euler angles
-		static double lastX = 256, lastY = 256, mouSensitivity = 0.05, scrollSensitivity = 0.05f, keyboardSensitivity = 2;
+		static double lastX = 256, lastY = 256, mouSensitivity = 0.05, scrollSensitivity = 0.05f, keyboardSensitivity = 2, min_depth_bound = 0.5;
 
 		//a camera binded to current window
 		static Camera *bindedCamera = nullptr;
-
 		//call backs		
 		static void(*displayCallback)() = nullptr;
 		static void(*mouseCallback)(double, double) = nullptr;
@@ -73,6 +72,13 @@ namespace redips{
 							if (keys[GLFW_KEY_Y]) cam->translate(cam->cameraY*keyboardSensitivity);
 							if (keys[GLFW_KEY_W]) cam->translate(cam->cameraZ*-keyboardSensitivity);
 							if (keys[GLFW_KEY_S]) cam->translate(cam->cameraZ*keyboardSensitivity);
+
+							if (keys[GLFW_KEY_UP]) keyboardSensitivity += 0.01;
+							if (keys[GLFW_KEY_DOWN]) { 
+								keyboardSensitivity -= 0.01; 
+								if (keyboardSensitivity < 0.02)
+									keyboardSensitivity = 0.02;
+							}
 						}
 					}
 
@@ -193,13 +199,13 @@ namespace redips{
 					else{
 						switch (button){
 						case GLFW_MOUSE_BUTTON_LEFT:
-							puts("Mosue left button clicked!");
+							//puts("Mouse left button clicked!");
 							break;
 						case GLFW_MOUSE_BUTTON_MIDDLE:
-							puts("Mosue middle button clicked!");
+							//puts("Mouse middle button clicked!");
 							break;
 						case GLFW_MOUSE_BUTTON_RIGHT:
-							puts("Mosue right button clicked!");
+							//puts("Mouse right button clicked!");
 							break;
 						default:
 							return;
@@ -224,14 +230,14 @@ namespace redips{
 				xangle -= xoffset;
 				yangle -= yoffset;
 				auto phcptr = ((redips::PhC*)bindedCamera);
-				/*******************	1	********************
+				/*******************	1	********************/
 				auto rot = redips::Mat33f::pan(RAD(xangle)) * redips::Mat33f::tilt(RAD(yangle));
 				phcptr->cameraX = rot * redips::float3(1, 0, 0);
 				phcptr->cameraY = rot * redips::float3(0, 1, 0);
 				phcptr->cameraZ = rot * redips::float3(0, 0, 1);
 				phcptr->updateExtrinsic();
 				/***********************************************/
-				/*******************	2	********************/
+				/*******************	2	********************
 				auto c2w = phcptr->c2w3()*redips::Mat33f::pan(RAD(xoffset)) * redips::Mat33f::tilt(RAD(-yoffset));
 				phcptr->cameraX = c2w.col(0);
 				phcptr->cameraY = c2w.col(1);
@@ -251,8 +257,3 @@ namespace redips{
 		}
 	}
 }
-
-
-
-
-
