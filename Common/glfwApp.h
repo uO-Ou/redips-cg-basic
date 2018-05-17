@@ -34,7 +34,7 @@ namespace redips{
 		static bool firstMouse = true;
 		static bool enableMouse = true;
 		static float xangle = 0, yangle = 0;  // for camera's Euler angles
-		static double lastX = 256, lastY = 256, mouSensitivity = 0.05, scrollSensitivity = 0.05f, keyboardSensitivity = 2, min_depth_bound = 0.5;
+		static double lastX = 256, lastY = 256, mouSensitivity = 0.05, scrollSensitivity = 0.05f, keyboardSensitivity = 0.2, min_depth_bound = 0.5;
 
 		//a camera binded to current window
 		static Camera *bindedCamera = nullptr;

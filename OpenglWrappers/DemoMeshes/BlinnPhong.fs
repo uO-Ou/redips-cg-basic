@@ -1,51 +1,76 @@
 #version 430 core
 out vec4 color;
 
-uniform vec3 lightPos;
-uniform vec3 lightColor;
-uniform vec3 cameraPos;
+in Pipe{
+   vec3 Normal;
+   vec3 FragPos;
+   vec2 TexCoord;
+}fsInput;
 
-in vec3 Normal;
-in vec3 FragPos;
-in vec2 TexCoord;
+//material
+uniform struct Material{
+	uint flags; //0:no texture,1:ambientTexture,2:diffuseTexture,3:both
+	vec3 diffuse,ambient;
+	sampler2D diffuseTexture;
+	sampler2D ambientTexture;
+}material;
 
-//0:no texture,1:ambientTexture,2:diffuseTexture,3:two textures
-uniform int surfaceType;
-uniform vec3 diffuseColor;
-uniform vec3 ambientColor;
-uniform sampler2D diffuseTexture;
-uniform sampler2D ambientTexture;
+//lights
+#define MAX_POINT_LIGHT_NUMBER 6
+#define MAX_DIRECTIONAL_LIGHT_NUMBER 2
+uniform struct PointLight{
+    vec3 position;
+    vec3 intensity;
+    vec3 attenuation;
+}pointLights [MAX_POINT_LIGHT_NUMBER];
 
-const float M = 16.0f;
+uniform struct DirectionalLight{
+	vec3 direction;
+	vec3 intensity;
+}directionaLights [MAX_DIRECTIONAL_LIGHT_NUMBER];
+
+uniform int pointLightNumber, directionaLightNumber;
+
+//camera
+uniform vec3 cameraPosition;
+
+const float M = 2.0f;
 const float SpecularStrength = 0.5f;
-const float SC = 1.0f;
-const float SL = 0.000000004;
-const float SQ = 0.0000000001;
 
 void main(){
-    // Attenuation
-    float distance = length(lightPos - FragPos);
-    float attenuation = 1.0 / (SC + SL * distance + SQ * distance * distance);
+    vec3 N = normalize(fsInput.Normal);
 
-    // Diffuse
-    vec3 N = normalize(Normal);
-    vec3 L = normalize(lightPos - FragPos);
-	  vec3 diffuse = max(dot(N, L), 0.0) * attenuation * lightColor;
+	// Ambient
+	vec3 Ambient = vec3(0,0,0);
+	if((material.flags&1u)==0) Ambient = material.ambient;
+	else Ambient = (texture(material.ambientTexture,fsInput.TexCoord).bgr * material.ambient);
 
-    // Specular
-    vec3 H = normalize(cameraPos - FragPos + lightPos - FragPos);
-    vec3 specular = SpecularStrength * pow(max(dot(H, N), 0.0), M) * attenuation * lightColor;
+	vec3 Diffuse = vec3(0,0,0),Specular = vec3(0,0,0);
+	//loop directional lights
+    for(int i = 0;i < directionaLightNumber; ++i){
+		// Diffuse
+		Diffuse += (max(dot(N, -directionaLights[i].direction), 0.0) * directionaLights[i].intensity);
+		
+		// Specular
+		vec3 H = normalize(cameraPosition - fsInput.FragPos - directionaLights[i].direction);
+        Specular += SpecularStrength * pow(max(dot(H, N), 0.0), M) * directionaLights[i].intensity;
+	}
+    //loop point lights
+    for(int i = 0;i < pointLightNumber; ++i){
+         vec3 L = pointLights[i].position - fsInput.FragPos;
+         float distance = length(L);    L = L * (1.0/distance);
+         float attenuation = 1.0 / dot(pointLights[i].attenuation,vec3(1,distance,distance*distance));
 
-    // Sum up
-    vec3 ambient;
-    if((surfaceType&1u)>0)
-        ambient = (texture(ambientTexture,TexCoord).bgr * ambientColor);
-    else ambient = ambientColor;
+         //Diffuse
+         Diffuse += max(dot(L,N),0.0)*pointLights[i].intensity*attenuation;
 
-    if((surfaceType&2u)>0)
-        diffuse *= (texture(diffuseTexture,TexCoord).bgr * diffuseColor);
-    else diffuse *= diffuseColor;
+         // Specular
+         vec3 H = normalize(cameraPosition - fsInput.FragPos + pointLights[i].position-fsInput.FragPos);
+         Specular += SpecularStrength * pow(max(dot(H,N),0.0),M) * pointLights[i].intensity*attenuation;
+    }
 
-	color = vec4(ambient+diffuse+specular,1.0f);
-	//color = vec4(0,0,0,1);
+	if((material.flags&2u)==0) Diffuse *= material.diffuse;
+	else Diffuse *= (texture(material.diffuseTexture,fsInput.TexCoord).bgr * material.diffuse);
+	
+	color = vec4(Ambient+Diffuse+Specular,1.0f);
 }

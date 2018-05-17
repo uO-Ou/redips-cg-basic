@@ -16,13 +16,14 @@ template<typename MatrixType> void selfadjoint(const MatrixType& m)
 {
   typedef typename MatrixType::Index Index;
   typedef typename MatrixType::Scalar Scalar;
-  typedef typename NumTraits<Scalar>::Real RealScalar;
 
   Index rows = m.rows();
   Index cols = m.cols();
 
   MatrixType m1 = MatrixType::Random(rows, cols),
-             m3(rows, cols);
+             m2 = MatrixType::Random(rows, cols),
+             m3(rows, cols),
+             m4(rows, cols);
 
   m1.diagonal() = m1.diagonal().real().template cast<Scalar>();
 
@@ -31,10 +32,19 @@ template<typename MatrixType> void selfadjoint(const MatrixType& m)
   VERIFY_IS_APPROX(MatrixType(m3.template triangularView<Upper>()), MatrixType(m1.template triangularView<Upper>()));
   VERIFY_IS_APPROX(m3, m3.adjoint());
 
-
   m3 = m1.template selfadjointView<Lower>();
   VERIFY_IS_APPROX(MatrixType(m3.template triangularView<Lower>()), MatrixType(m1.template triangularView<Lower>()));
   VERIFY_IS_APPROX(m3, m3.adjoint());
+
+  m3 = m1.template selfadjointView<Upper>();
+  m4 = m2;
+  m4 += m1.template selfadjointView<Upper>();
+  VERIFY_IS_APPROX(m4, m2+m3);
+
+  m3 = m1.template selfadjointView<Lower>();
+  m4 = m2;
+  m4 -= m1.template selfadjointView<Lower>();
+  VERIFY_IS_APPROX(m4, m2-m3);
 }
 
 void bug_159()
@@ -47,7 +57,7 @@ void test_selfadjoint()
 {
   for(int i = 0; i < g_repeat ; i++)
   {
-    int s = internal::random<int>(1,EIGEN_TEST_MAX_SIZE); EIGEN_UNUSED_VARIABLE(s);
+    int s = internal::random<int>(1,EIGEN_TEST_MAX_SIZE);
 
     CALL_SUBTEST_1( selfadjoint(Matrix<float, 1, 1>()) );
     CALL_SUBTEST_2( selfadjoint(Matrix<float, 2, 2>()) );
@@ -55,7 +65,7 @@ void test_selfadjoint()
     CALL_SUBTEST_4( selfadjoint(MatrixXcd(s,s)) );
     CALL_SUBTEST_5( selfadjoint(Matrix<float,Dynamic,Dynamic,RowMajor>(s, s)) );
     
-    EIGEN_UNUSED_VARIABLE(s)
+    TEST_SET_BUT_UNUSED_VARIABLE(s)
   }
   
   CALL_SUBTEST_1( bug_159() );

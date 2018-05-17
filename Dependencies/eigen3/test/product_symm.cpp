@@ -11,8 +11,6 @@
 
 template<typename Scalar, int Size, int OtherSize> void symm(int size = Size, int othersize = OtherSize)
 {
-  typedef typename NumTraits<Scalar>::Real RealScalar;
-
   typedef Matrix<Scalar, Size, Size> MatrixType;
   typedef Matrix<Scalar, Size, OtherSize> Rhs1;
   typedef Matrix<Scalar, OtherSize, Size> Rhs2;
@@ -40,6 +38,24 @@ template<typename Scalar, int Size, int OtherSize> void symm(int size = Size, in
   VERIFY_IS_EQUAL(m1, m3);
   VERIFY_IS_APPROX(rhs12 = (s1*m2).template selfadjointView<Lower>() * (s2*rhs1),
                    rhs13 = (s1*m1) * (s2*rhs1));
+
+  VERIFY_IS_APPROX(rhs12 = (s1*m2).transpose().template selfadjointView<Upper>() * (s2*rhs1),
+                   rhs13 = (s1*m1.transpose()) * (s2*rhs1));
+
+  VERIFY_IS_APPROX(rhs12 = (s1*m2).template selfadjointView<Lower>().transpose() * (s2*rhs1),
+                   rhs13 = (s1*m1.transpose()) * (s2*rhs1));
+
+  VERIFY_IS_APPROX(rhs12 = (s1*m2).conjugate().template selfadjointView<Lower>() * (s2*rhs1),
+                   rhs13 = (s1*m1).conjugate() * (s2*rhs1));
+
+  VERIFY_IS_APPROX(rhs12 = (s1*m2).template selfadjointView<Lower>().conjugate() * (s2*rhs1),
+                   rhs13 = (s1*m1).conjugate() * (s2*rhs1));
+
+  VERIFY_IS_APPROX(rhs12 = (s1*m2).adjoint().template selfadjointView<Upper>() * (s2*rhs1),
+                   rhs13 = (s1*m1).adjoint() * (s2*rhs1));
+
+  VERIFY_IS_APPROX(rhs12 = (s1*m2).template selfadjointView<Lower>().adjoint() * (s2*rhs1),
+                   rhs13 = (s1*m1).adjoint() * (s2*rhs1));
 
   m2 = m1.template triangularView<Upper>(); rhs12.setRandom(); rhs13 = rhs12;
   m3 = m2.template selfadjointView<Upper>();

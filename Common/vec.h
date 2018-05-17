@@ -252,10 +252,21 @@ namespace redips{
 
 		Mat44<T> transpose() const { Mat44<T> ret; for (int i = 0; i < 4; i++) for (int j = 0; j < 4; j++) ret[i][j] = m[j][i]; return ret; }
 
+		operator Mat33<T>() const {
+			Mat33<T> ret;
+			for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j){
+				ret[i][j] = m[i][j];
+			}
+			return ret;
+		};
+
+		Vec4<T> col(int idx) const { return Vec4<T>(m[0][idx], m[1][idx], m[2][idx], m[3][idx]); }
+		Vec4<T> row(int idx) const { return Vec4<T>(m[idx][0], m[idx][1], m[idx][2], m[idx][3]); }
+
 		void setrow(const Vec4<T>& data, std::size_t idx) { for (int i = 0; i < 4; i++) m[idx][i] = data[i]; };
 		void setcol(const Vec4<T>& data, std::size_t idx){ for (int i = 0; i < 4; i++) m[i][idx] = data[i]; };
 		void setUpperLeft(const Mat33<T>& upperLeft){ for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) m[i][j] = upperLeft[i][j]; }
-
+		
 		//column-major transform
 		static Mat44<T> eye(){ Mat44<T> ret; for (int i = 0; i < 4; i++) ret[i][i] = T(1); return ret; }
 		static Mat44<T> translation(float3 offset){

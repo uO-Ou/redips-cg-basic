@@ -30,12 +30,13 @@ namespace redips{
 			if (!m_shader) { std::cerr << "shader error" << std::endl; return; };
 			m_shader->Use();
 			for (int i = 0; i < meshCnt; i++){
-				int stype = 0;
+				unsigned int flags = 0;
 				if (meshMtls[i]->texture_ka != NULL && meshFaceTypes[i] == redips::GROUP_FACE_TYPE::_withtex_){
 					glActiveTexture(GL_TEXTURE0);
 					glBindTexture(GL_TEXTURE_2D, mtlTextureHandle[meshMtls[i]->texture_ka]);
 					glUniform1i(glGetUniformLocation(m_shader->Program, shaderAmbientTextureUniformStr), shaderAmbientTextureLocation);
-					stype |= 1u;
+					flags |= 1u;
+					
 				}
 				{
 					redips::float3 color = meshMtls[i]->ambient;
@@ -45,13 +46,13 @@ namespace redips{
 					glActiveTexture(GL_TEXTURE1);
 					glBindTexture(GL_TEXTURE_2D, mtlTextureHandle[meshMtls[i]->texture_kd]);
 					glUniform1i(glGetUniformLocation(m_shader->Program, shaderDiffuseTextureUniformStr), shaderDiffuseTextureLocation);
-					stype |= 2u;
+					flags |= 2u;
 				}
 				{
 					redips::float3 color = meshMtls[i]->diffuse;
 					glUniform3f(glGetUniformLocation(m_shader->Program, shaderDiffuseColorUniformStr), color.x, color.y, color.z);
 				}
-				glUniform1i(glGetUniformLocation(m_shader->Program, shaderSurfaceTypeUniformStr), stype);
+				glUniform1ui(glGetUniformLocation(m_shader->Program, shaderSurfaceTypeUniformStr), flags);
 
 				glBindVertexArray(vaos[i]);
 				glDrawArrays(GL_TRIANGLES, 0, 3 * meshFaceCnt[i]);
@@ -59,11 +60,11 @@ namespace redips{
 		}
 		~BlinnPhongMesh(){};
 
-		const GLchar* shaderSurfaceTypeUniformStr = "surfaceType";
-		const GLchar* shaderAmbientColorUniformStr = "ambientColor";
-		const GLchar* shaderDiffuseColorUniformStr = "diffuseColor";
-		const GLchar* shaderAmbientTextureUniformStr = "ambientTexture";
-		const GLchar* shaderDiffuseTextureUniformStr = "diffuseTexture";
+		const GLchar* shaderSurfaceTypeUniformStr = "material.flags";
+		const GLchar* shaderAmbientColorUniformStr = "material.ambient";
+		const GLchar* shaderDiffuseColorUniformStr = "material.diffuse";
+		const GLchar* shaderAmbientTextureUniformStr = "material.ambientTexture";
+		const GLchar* shaderDiffuseTextureUniformStr = "material.diffuseTexture";
 		const GLuint shaderAmbientTextureLocation = 0;
 		const GLuint shaderDiffuseTextureLocation = 1;
 	};

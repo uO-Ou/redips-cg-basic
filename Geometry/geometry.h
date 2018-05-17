@@ -5,6 +5,7 @@
 */
 #pragma once
 #include "../Common/vec.h"
+#include "../Common/utils.h"
 namespace redips{
 	class BOX{
 	public:
@@ -37,6 +38,7 @@ namespace redips{
 			return ret;
 		}
 
+		float volume() const { return xdim()*ydim()*zdim(); };
 		float right() const { return rtf.x; }
 		float top() const { return rtf.y; }
 		float front() const { return rtf.z; }
@@ -54,21 +56,7 @@ namespace redips{
 		}
 	};
 
-	class Light{
-	public:
-		float3 position;
-		float3 intensity;
-		float3 attenuation_coef;
-		Light(){
-			position = float3(0.0f);
-			intensity = float3{ 1.0f, 1.0f, 1.0f };
-			attenuation_coef = float3(1.0f, 10.0f, 10.0f);
-		}
-		Light(float3 pos, float3 color, float3 attenuation_coef = float3(1.0f, 10.0f, 100.0f)) :position(pos), intensity(color), attenuation_coef(attenuation_coef){};
-		float attenuation(float dist){
-			return 1.0f / (attenuation_coef.dot(float3(1, dist, dist*dist)));
-		}
-	};
+
 
 	class GeoUtil{
 	public:
@@ -83,6 +71,10 @@ namespace redips{
 			float3 pb = b - p;
 			float3 pc = c - p;
 			return float3((pb^pc).length()*0.5 / area, (pc^pa).length()*0.5 / area, (pa^pb).length()*0.5 / area);
+		}
+		static float3 symmetryDotWithRespect2APanel(float3 p,float3 pInPlane,float3 planeNormal){
+			planeNormal = planeNormal.unit();
+			return p + planeNormal*((pInPlane - p).dot(planeNormal) * 2);
 		}
 		static float3 rotateAroundAxis(const float3& axis, const float3& pos, float theta, float3 O = float3(0.0f)){
 			puts("rotate around axis may wrong , modify later");
@@ -130,6 +122,9 @@ namespace redips{
 		}
 		float3 ori, dir, inv_dir;
 	public:
+		float intersect(const float3& panel_center, const float3& panel_normal) {
+			return (panel_center - ori).dot(panel_normal) / dir.dot(panel_normal);
+		}
 		bool intersect(const BOX &box, float &tmin, float &tmax) const {
 			float l1 = (box.lbb.x - ori.x) * inv_dir.x;
 			float l2 = (box.rtf.x - ori.x) * inv_dir.x;
@@ -189,6 +184,57 @@ namespace redips{
 		float3 color;
 		float3 normal;
 		int hitIndex;
+	};
+
+	class Light{
+	public:
+		float3 position;
+		float3 intensity;
+		float3 attenuation_coef;
+		Light(){
+			position = float3(0.0f);
+			intensity = float3{ 1.0f, 1.0f, 1.0f };
+			attenuation_coef = float3(1.0f, 10.0f, 10.0f);
+		}
+		Light(float3 pos, float3 color, float3 attenuation_coef = float3(1.0f, 10.0f, 100.0f)) :position(pos), intensity(color), attenuation_coef(attenuation_coef){};
+		float attenuation(float dist) const{
+			return 1.0f / (attenuation_coef.dot(float3(1, dist, dist*dist)));
+		}
+		float radius() const{
+			float2 result;
+			int cnt = MathUtil::solve_quadratic_equation(attenuation_coef.z, attenuation_coef.y, -1e2, result);
+			if (cnt == 1){
+				if (result.x > 0) return result.x;
+				return 0;
+			}
+			else if (cnt == 2){
+				if (result.x > 0) return result.x;
+				else if (result.y > 0) return result.y;
+				return 0;
+			}
+			return 0;
+		}
+	};
+
+	class DirectionalLight{
+	public:
+		float3 direction, intensity;
+		DirectionalLight(const float3& direction, float3 intensity = float3(1, 1, 1)) :intensity(intensity){
+			this->direction = direction.unit();
+		}
+		Mat44f calProjectionView4ShadowMap(const float3& up, const BOX& scenebox){
+			Mat33f axis;
+			axis.setcol((up^direction).unit(), 0);
+			axis.setcol((direction^axis.col(0)).unit(), 1);
+			axis.setcol(direction, 2);
+			axis = axis.transpose();
+
+			BOX newBox;
+			for (unsigned int i = 0; i < 8; ++i)
+				newBox += (axis*(scenebox.lbb + float3::bits(i)*scenebox.dim()));
+
+			return GeoUtil::glOrtho(newBox) * Mat44f(axis);
+		}
 	};
 };
 

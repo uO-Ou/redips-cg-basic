@@ -6,6 +6,7 @@
 #pragma once
 #include <GL/glew.h>
 #include "../Common/FImage.h"
+#include <fstream>
 namespace redips{
 	class glTexture{
 	public:

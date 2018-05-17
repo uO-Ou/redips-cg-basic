@@ -73,17 +73,19 @@ template<typename MatrixType> void trmv(const MatrixType& m)
 
 void test_product_trmv()
 {
-  int s;
+  int s = 0;
   for(int i = 0; i < g_repeat ; i++) {
     CALL_SUBTEST_1( trmv(Matrix<float, 1, 1>()) );
     CALL_SUBTEST_2( trmv(Matrix<float, 2, 2>()) );
     CALL_SUBTEST_3( trmv(Matrix3d()) );
+    
     s = internal::random<int>(1,EIGEN_TEST_MAX_SIZE/2);
     CALL_SUBTEST_4( trmv(MatrixXcf(s,s)) );
-    s = internal::random<int>(1,EIGEN_TEST_MAX_SIZE/2);
     CALL_SUBTEST_5( trmv(MatrixXcd(s,s)) );
+    TEST_SET_BUT_UNUSED_VARIABLE(s)
+    
     s = internal::random<int>(1,EIGEN_TEST_MAX_SIZE);
     CALL_SUBTEST_6( trmv(Matrix<float,Dynamic,Dynamic,RowMajor>(s, s)) );
+    TEST_SET_BUT_UNUSED_VARIABLE(s)
   }
-  EIGEN_UNUSED_VARIABLE(s);
 }

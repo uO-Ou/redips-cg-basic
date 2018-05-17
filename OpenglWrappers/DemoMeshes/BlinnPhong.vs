@@ -4,21 +4,25 @@ layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 texcoord;
 
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 projection_view;
 
-out vec3 Normal;
-out vec3 FragPos;
-out vec2 TexCoord;
+out Pipe{
+	vec3 Normal;
+	vec3 FragPos;
+	vec2 TexCoord;
+}vsOutput;
 
 void main(){
-    vec4 inworld = model * vec4(position,1.0f);
-	  gl_Position = projection * view * inworld;
-
-	  FragPos = inworld.xyz;
-
+	  //write to pipe
+	  vec4 inworld = model * vec4(position,1.0f);
+	  vsOutput.FragPos = inworld.xyz;
+	  
 	  mat3 normalMatrix = transpose(inverse(mat3(model)));
-	  Normal = normalMatrix * normal;
+	  vsOutput.Normal = normalMatrix * normal;
+	  
+	  vsOutput.TexCoord = texcoord;
 
-	  TexCoord = texcoord;
+	  //calculate glPostion
+	  gl_Position = projection_view * inworld;
 }
+

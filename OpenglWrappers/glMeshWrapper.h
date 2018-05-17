@@ -36,8 +36,8 @@ namespace redips{
 
 			this->model = model;
 			this->mesh = model->mesh_ptr();
-			meshFaceCnt.resize(mesh->groups.size());
-			meshFaceTypes.resize(mesh->groups.size());
+			meshFaceCnt.resize(MAX(mesh->groups.size(),mesh->mtllib.size()));
+			meshFaceTypes.resize(MAX(mesh->groups.size(),mesh->mtllib.size()));
 			setup_type = option & WrapOption::_default_;
 			bool genGeoNormal = (option & WrapOption::_geNormal_);
 			bool genMipmapTexture = (option & WrapOption::_genMipmap_);
@@ -207,7 +207,7 @@ namespace redips{
 			drawAllMeshes();
 		};
 
-		const Triangles* model_ptr()  const{ return this->model; }
+		const Triangles* model_ptr() const{ return this->model; }
 
 		//shader uniforms
 	    void uniformMat44f(const char* name,const float* value){ 

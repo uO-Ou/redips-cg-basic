@@ -53,6 +53,23 @@ namespace redips{
 			type = CAMERA_TYPE::_phc_;
 			reset();
 		}
+		PhC(const Mat44f& projection_matrix, const Mat44f& view_matrix) {
+			//intrinsic
+			imageAspectRatio = filmAspectRatio = projection_matrix[1][1] / projection_matrix[0][0];
+			float fn = (projection_matrix[2][2] - 1) / (1 + projection_matrix[2][2]);
+			nearp = projection_matrix[2][3] * (fn - 1) / 2 / fn;
+			farp = fn * nearp;
+			canvaSize.x = -2 * nearp / projection_matrix[0][0];
+			canvaSize.y = -2 * nearp / projection_matrix[1][1];
+			filmSize = canvaSize;         //unknown,set to canvaSize
+			focalLength = fabs(nearp);    //unknown,set to nearp
+			updateIntrinsic();
+
+			//extrinsic
+			Mat33f R = view_matrix;
+			setExtrinsic(R.transpose(), R.transpose()*view_matrix.col(3).vec3()*-1);
+			type = CAMERA_TYPE::_phc_;
+		}
 		PhC& operator=(const PhC& another){
 			resolution = another.resolution;
 			filmAspectRatio = another.filmAspectRatio;
@@ -159,6 +176,7 @@ namespace redips{
 		const Mat44f& w2c() const { return world2camera; }
 		const Mat44f& glProjection() const { return projection.transpose(); };
 		const Mat44f& glView() const { return world2camera.transpose(); };
+		const Mat44f& glProjectionView() { return (projection*world2camera).transpose(); };
 		
 		//get pixel position in world-space
 		float3 getPixelWPos(int x,int y){

@@ -23,6 +23,9 @@ namespace redips{
 		void Transform(const Mat44f& transmat){
 			transform = transmat * transform;
 		}
+		void setTransform(const Mat44f& transmat){
+			transform = transmat;
+		}
 		//return bounding box after transformed
 		BOX aabb_T() const{
 			BOX ret;

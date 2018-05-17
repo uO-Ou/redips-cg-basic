@@ -38,6 +38,9 @@ bool aux_evalSolver( const POLYNOMIAL& pols, SOLVER& psolve )
 
   const Index deg = pols.size()-1;
 
+  // Test template constructor from coefficient vector
+  SOLVER solve_constr (pols);
+
   psolve.compute( pols );
   const RootsType& roots( psolve.roots() );
   EvalRootsType evr( deg );
@@ -92,6 +95,7 @@ void evalSolver( const POLYNOMIAL& pols )
 template< int Deg, typename POLYNOMIAL, typename ROOTS, typename REAL_ROOTS >
 void evalSolverSugarFunction( const POLYNOMIAL& pols, const ROOTS& roots, const REAL_ROOTS& real_roots )
 {
+  using std::sqrt;
   typedef typename POLYNOMIAL::Scalar Scalar;
 
   typedef PolynomialSolver<Scalar, Deg >              PolynomialSolverType;
@@ -106,23 +110,19 @@ void evalSolverSugarFunction( const POLYNOMIAL& pols, const ROOTS& roots, const 
     typedef typename POLYNOMIAL::Scalar                 Scalar;
     typedef typename REAL_ROOTS::Scalar                 Real;
 
-    typedef PolynomialSolver<Scalar, Deg >              PolynomialSolverType;
-    typedef typename PolynomialSolverType::RootsType    RootsType;
-    typedef Matrix<Scalar,Deg,1>                        EvalRootsType;
-
     //Test realRoots
     std::vector< Real > calc_realRoots;
     psolve.realRoots( calc_realRoots );
     VERIFY( calc_realRoots.size() == (size_t)real_roots.size() );
 
-    const Scalar psPrec = internal::sqrt( test_precision<Scalar>() );
+    const Scalar psPrec = sqrt( test_precision<Scalar>() );
 
     for( size_t i=0; i<calc_realRoots.size(); ++i )
     {
       bool found = false;
       for( size_t j=0; j<calc_realRoots.size()&& !found; ++j )
       {
-        if( internal::isApprox( calc_realRoots[i], real_roots[j] ), psPrec ){
+        if( internal::isApprox( calc_realRoots[i], real_roots[j], psPrec ) ){
           found = true; }
       }
       VERIFY( found );
@@ -130,24 +130,24 @@ void evalSolverSugarFunction( const POLYNOMIAL& pols, const ROOTS& roots, const 
 
     //Test greatestRoot
     VERIFY( internal::isApprox( roots.array().abs().maxCoeff(),
-          internal::abs( psolve.greatestRoot() ), psPrec ) );
+          abs( psolve.greatestRoot() ), psPrec ) );
 
     //Test smallestRoot
     VERIFY( internal::isApprox( roots.array().abs().minCoeff(),
-          internal::abs( psolve.smallestRoot() ), psPrec ) );
+          abs( psolve.smallestRoot() ), psPrec ) );
 
     bool hasRealRoot;
     //Test absGreatestRealRoot
     Real r = psolve.absGreatestRealRoot( hasRealRoot );
     VERIFY( hasRealRoot == (real_roots.size() > 0 ) );
     if( hasRealRoot ){
-      VERIFY( internal::isApprox( real_roots.array().abs().maxCoeff(), internal::abs(r), psPrec ) );  }
+      VERIFY( internal::isApprox( real_roots.array().abs().maxCoeff(), abs(r), psPrec ) );  }
 
     //Test absSmallestRealRoot
     r = psolve.absSmallestRealRoot( hasRealRoot );
     VERIFY( hasRealRoot == (real_roots.size() > 0 ) );
     if( hasRealRoot ){
-      VERIFY( internal::isApprox( real_roots.array().abs().minCoeff(), internal::abs( r ), psPrec ) ); }
+      VERIFY( internal::isApprox( real_roots.array().abs().minCoeff(), abs( r ), psPrec ) ); }
 
     //Test greatestRealRoot
     r = psolve.greatestRealRoot( hasRealRoot );
@@ -213,5 +213,6 @@ void test_polynomialsolver()
     CALL_SUBTEST_10((polynomialsolver<double,Dynamic>(
             internal::random<int>(9,13)
             )) );
+    CALL_SUBTEST_11((polynomialsolver<float,Dynamic>(1)) );
   }
 }

@@ -23,10 +23,10 @@ void movement(){}
 void display(){
 	using namespace redips;
 	gbuffer.bind4Writing();
-
-	mesh.uniformMat44f("view", phc.glView().ptr());
-	mesh.uniformMat44f("projection", phc.glProjection().ptr());
-	mesh.uniformMat44f("model", redips::Mat44f::scale(1.0f).transpose().ptr());
+	
+	mesh.uniformMat44f("model", redips::Mat44f::eye().ptr());
+	mesh.uniformMat44f("projection_view", phc.glProjectionView().ptr());
+	
 	mesh.draw();
 
 	gbuffer.render(redips::GBuffer::_GL_GBUFFER_TEXTURE_TYPE_::_normal_);
