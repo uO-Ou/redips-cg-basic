@@ -60,65 +60,7 @@ namespace redips{
 				}
 			}
 			else if (camera.type == CAMERA_TYPE::_mpc_){
-				const MPC& mpc = dynamic_cast<const MPC&>(camera);
-				for (int x = 0; x < imgwidth; x++) for (int y = 0; y < imgheight; y++){
-					HitRecord records;
-					//in transition region
-					if (abs(x-imgwidth/2)<mpc.tpanel.x/2&&abs(y-imgheight/2)<mpc.tpanel.y/2){
-						float3 spoint((x*1.0/mpc.resolution.x-0.5f)*mpc.canvaSize.x,(y*1.0/mpc.resolution.y-0.5f)*mpc.canvaSize.y,mpc.nearp);
-						float3 epoint = mpc.layers[0][0].getEndsPoint(spoint);
-						{//first layer
-							auto tsp = mpc.c2w3()*spoint+mpc.pos();
-							auto tep = mpc.c2w3()*epoint+mpc.pos();
-							records.distance = (tep - tsp).length();
-							trace(1, Ray(tsp,tep-tsp), records);
-						}
-						
-						//middle layers
-						if(records.hitIndex<0){
-							spoint = epoint;
-							int mpc_region_id = -1;
-							float min_dist = FLT_MAX;
-							for (int i = 0; i < 5; i++){
-								//if (mpc.layers[1][i].contains(spoint)){
-								//	mpc_region_id = i; break;
-								//}
-								auto tmp = mpc.layers[1][i].contains(spoint);
-								if (tmp<min_dist){
-									mpc_region_id = i;
-									min_dist = tmp;
-								}
-							}
-							_RUNTIME_ASSERT_(mpc_region_id>-1,"raytracing mpc-camera transition region ray shooter failed");
-							for (int l = 1; l < 4; l++){
-								epoint = mpc.layers[l][mpc_region_id].getEndsPoint(spoint);
-								auto tsp = mpc.c2w3()*spoint+mpc.pos();
-								auto tep = mpc.c2w3()*epoint+mpc.pos();
-								records.distance = (tep - tsp).length();
-								trace(1, Ray(tsp, tep - tsp), records);
-								if (records.hitIndex >= 0) break;
-								spoint = epoint;
-							}
-						}
-						//final layer
-						if (records.hitIndex<0){
-							epoint = mpc.layers[4][0].getEndsPoint(spoint);
-							auto tsp = mpc.c2w3()*spoint+mpc.pos();
-							auto tep = mpc.c2w3()*epoint+mpc.pos();
-							records.distance = (tep - tsp).length();
-							trace(1, Ray(tsp, tep - tsp), records);
-						}
-					}
-					else{
-						trace(1, mpc.getRay(x, y), records);
-					}
-					if (records.color.x>1) records.color.x = 1;
-					if (records.color.y>1) records.color.y = 1;
-					if (records.color.z>1) records.color.z = 1;
-					imgbuf[(y*imgwidth + x) * bpp + 0] = records.color.z * 255;
-					imgbuf[(y*imgwidth + x) * bpp + 1] = records.color.y * 255;
-					imgbuf[(y*imgwidth + x) * bpp + 2] = records.color.x * 255;
-				}
+
 			}
 			clock_t finish = clock();
 			printf("[ray-tracer] : cost %lf ms\n", (double)(finish - start) / CLOCKS_PER_SEC * 1000);

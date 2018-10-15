@@ -26,6 +26,12 @@ namespace redips{
 			return (*this);
 		}
 
+		BOX operator+ (float gap){
+			this->lbb -= float3(gap,gap,gap);
+			this->rtf += float3(gap, gap, gap);
+			return *this;
+		}
+
 		BOX operator+ (const float3& p){
 			BOX ret = (*this);
 			ret += p;
@@ -56,10 +62,25 @@ namespace redips{
 		}
 	};
 
-
-
 	class GeoUtil{
 	public:
+		//T[0,PI] P[0, 2PI]
+		static double2 XYZ_2_TP(double x, double y, double z){
+			auto T = std::acos(CLAMP(y, -1, 1));         //[0,  PI]
+			auto P = std::atan2(z, x);                   //[-PI,PI]
+			if (P < 0) P += 2 * PI;
+			return redips::Vec2<double >(T, P);
+		}
+
+		//theta [0, PI], phi [0, 2PI]
+		static double3 TP_2_XYZ(double theta, double phi){
+			auto sinTheta = std::sin(theta);
+			auto cosTheta = std::cos(theta);
+			auto sinPhi = std::sin(phi);
+			auto cosPhi = std::cos(phi);
+			return redips::double3(sinTheta*cosPhi, cosTheta, sinTheta*sinPhi);
+		}
+
 		static float triarea(const float3& a, const float3& b, const float3& c){
 			float3 ab = b - a;
 			float3 ac = c - a;
@@ -200,9 +221,10 @@ namespace redips{
 		float attenuation(float dist) const{
 			return 1.0f / (attenuation_coef.dot(float3(1, dist, dist*dist)));
 		}
-		float radius() const{
+		float radius(float falloffRatio = 0.5) const{
 			float2 result;
-			int cnt = MathUtil::solve_quadratic_equation(attenuation_coef.z, attenuation_coef.y, -1e2, result);
+			//int cnt = MathUtil::solve_quadratic_equation(attenuation_coef.z, attenuation_coef.y, -1e2, result);
+			int cnt = MathUtil::solve_quadratic_equation(attenuation_coef.z, attenuation_coef.y, -(1.0 / falloffRatio) * fabs(intensity.dot(float3(0.3f, 0.59f, 0.11f))), result);
 			if (cnt == 1){
 				if (result.x > 0) return result.x;
 				return 0;
@@ -216,13 +238,18 @@ namespace redips{
 		}
 	};
 
+	class SpotLight : public Light{
+		float3 mainAxis;
+	};
+
 	class DirectionalLight{
 	public:
 		float3 direction, intensity;
+		DirectionalLight() : direction(float3(0.0f)), intensity(float3(0.0f)) {}
 		DirectionalLight(const float3& direction, float3 intensity = float3(1, 1, 1)) :intensity(intensity){
 			this->direction = direction.unit();
 		}
-		Mat44f calProjectionView4ShadowMap(const float3& up, const BOX& scenebox){
+		Mat44f calProjectionView4ShadowMap(const float3& up, const BOX& scenebox) const{
 			Mat33f axis;
 			axis.setcol((up^direction).unit(), 0);
 			axis.setcol((direction^axis.col(0)).unit(), 1);

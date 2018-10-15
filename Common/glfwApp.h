@@ -25,6 +25,7 @@ namespace redips{
 		//};
 		//int KeyEvent::key = 0;
 
+		static GLfloat curfps = 0.0f;
 		static GLfloat deltaTime = 0.0f;
 		static GLfloat lastFrame = 0.0f;
 		
@@ -34,7 +35,7 @@ namespace redips{
 		static bool firstMouse = true;
 		static bool enableMouse = true;
 		static float xangle = 0, yangle = 0;  // for camera's Euler angles
-		static double lastX = 256, lastY = 256, mouSensitivity = 0.05, scrollSensitivity = 0.05f, keyboardSensitivity = 0.2, min_depth_bound = 0.5;
+		static double lastX = 256, lastY = 256, mouSensitivity = 0.05, scrollSensitivity = 0.05f, keyboardSensitivity = 0.0005f, min_depth_bound = 0.5;
 
 		//a camera binded to current window
 		static Camera *bindedCamera = nullptr;
@@ -57,8 +58,9 @@ namespace redips{
 					GLfloat currentFrame = glfwGetTime();
 					deltaTime = currentFrame - lastFrame;
 					lastFrame = currentFrame;
+					curfps = 1 / deltaTime;
 					if (show_fps){
-						sprintf_s(strbuf, "%s - %.1f fps, %.1f ms\n",windowTitle, 1 / deltaTime, deltaTime * 1000);
+						sprintf_s(strbuf, "%s - %.1f fps, %.1f ms\n", windowTitle, curfps, deltaTime * 1000);
 						glfwSetWindowTitle(window, strbuf);
 					}
 					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -113,7 +115,12 @@ namespace redips{
 				if (keyboardSensitivity < 1e-4) keyboardSensitivity = 1e-3;
 			};
 			void setWindowTitle(const char* title){ strcpy_s(windowTitle, title); }
-			bool keydown(int id){ return keys[id]; }
+			bool keydown(int id){ 
+				if (keys[id]) {
+					keys[id] = false; return true;
+				}
+				return false;
+			}
 			//int keydown(){ return keyRecorder.getKey(); };
 			void closeWindow(){ glfwSetWindowShouldClose(window, GL_TRUE); }
 		private:
@@ -148,10 +155,10 @@ namespace redips{
 				// Define the viewport dimensions
 				glViewport(0, 0, win_width, win_height);
 				glEnable(GL_DEPTH_TEST);
-				glClearColor(0.88f, 0.99f, 0.99f, 1.0f);
+				//glClearColor(0.88f, 0.99f, 0.99f, 1.0f);
 				//glClearColor(0.27f, 0.55f, 0.52f, 1.0f);
-				//glClearColor(0.0f,0.0f,0.0f,1.0f);
-
+				glClearColor(0.0f,0.0f,0.0f,1.0f);
+				//glClearColor(1,1,1,1);
 				CHECK_GL_ERROR("opengl-environment setup failed");
 			};
 
@@ -169,7 +176,6 @@ namespace redips{
 			}
 			//mouse callbacks
 			static void mouse_callback(GLFWwindow* window, double xpos, double ypos){
-				if (!enableMouse) return;
 				if (firstMouse){
 					lastX = xpos;
 					lastY = ypos;
@@ -185,7 +191,7 @@ namespace redips{
 				if (mouseCallback){
 					mouseCallback(xpos,ypos);
 				}
-				else if (bindedCamera){
+				else if (bindedCamera&&enableMouse){
 					if (bindedCamera->type == CAMERA_TYPE::_phc_){
 						mouseCallback4phc(xoffset*mouSensitivity, yoffset*mouSensitivity);
 					}

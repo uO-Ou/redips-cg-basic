@@ -37,9 +37,20 @@ namespace redips{
 		Vec2<T>& operator-=(const Vec2<T> &v) { x -= v.x, y -= v.y; return *this; }
 
 		T operator^ (const Vec2<T> &v) const { return (T)(x*v.y - y*v.x); };
+
+		T dot(const Vec2<T> &v) const { return x*v.x + y*v.y ; };
+
+		float length() const { return sqrt((float)x*x + y*y); };
+		T length2() const { return x*x + y*y; };
+
+		Vec2<float> unit() const {
+			float scale = 1.0 / length();
+			return (*this)*scale;
+		}
 	};
 	typedef Vec2<int> int2;
 	typedef Vec2<float > float2;
+	typedef Vec2<double > double2;
 	typedef Vec2<unsigned int> uint2;
 
 	template<typename T>
@@ -62,10 +73,11 @@ namespace redips{
 
 		Vec3<float> unit() const{
 			float scale = 1.0 / length();
-			return (*this)*scale;
+			return Vec3<float>(x*scale, y*scale, z*scale);
 		}
-
-		T dot(const Vec3<T> &v) const { return x*v.x + y*v.y + z*v.z; };
+		
+		template <class Q>
+		T dot(const Vec3<Q> &v) const { return x*v.x + y*v.y + z*v.z; };
 
 		Vec3<T> square() const{ return Vec3<T>(x*x, y*y, z*z); };
 
@@ -86,6 +98,50 @@ namespace redips{
 
 		T& operator[] (std::size_t idx) { return *((&x) + idx); };
 		const T& operator[] (std::size_t idx) const { return *((&x) + idx); };
+
+		bool operator<(const Vec3<T>& another) const {
+			if (x == another.x) {
+				if (y == another.y) {
+					return z < another.z;
+				}
+				return y < another.y;
+			}
+			return x < another.x;
+		}
+
+		//friend bool operator< <> (const Vec3<T>& a, const Vec3<T>& b);
+		/*
+		bool operator<(const Vec3<float>& a, const Vec3<float>& b) {
+			std::cout << ("float") << std::endl;;
+			if (fabs(a.x - b.x) < 1e-5) {
+				if (fabs(a.y - b.y) < 1e-5) {
+					if (fabs(a.z - b.z) < 1e-5) {
+						return false;
+					}
+					else {
+						return a.z < b.z;
+					}
+				}
+				else {
+					return a.y < b.y;
+				}
+			}
+			else {
+				return a.x < b.x;
+			}
+		}
+		*/
+
+		bool operator!=(const Vec3<float>& another) const {
+			if (fabs(x - another[0]) > 1e-5) return true;
+			if (fabs(y - another[1]) > 1e-5) return true;
+			if (fabs(z - another[2]) > 1e-5) return true;
+			return false;
+		}
+
+		bool operator==(const Vec3<float>& another) const {
+			return !((*this) != another);
+		}
 
 		Vec3<T> operator/ (const Vec3<T>& another) const{ return Vec3<T>(x / another.x, y / another.y, z / another.z); };
 		Vec3<T> operator/= (const Vec3<T>& another) {x /= another.x, y /= another.y, z /= another.z; return *this;};
@@ -121,6 +177,7 @@ namespace redips{
 	typedef Vec3<unsigned int> uint3;
 	typedef Vec3<int > int3;
 	typedef Vec3<float > float3;
+	typedef Vec3<double > double3;
 
 	template<typename T>
 	class Vec4{
@@ -144,6 +201,7 @@ namespace redips{
 	};
 	typedef Vec4<int > int4;
 	typedef Vec4<float > float4;
+	typedef Vec4<double > double4;
 
 	template<typename T>
 	class Mat33{
@@ -269,7 +327,7 @@ namespace redips{
 		
 		//column-major transform
 		static Mat44<T> eye(){ Mat44<T> ret; for (int i = 0; i < 4; i++) ret[i][i] = T(1); return ret; }
-		static Mat44<T> translation(float3 offset){
+		static Mat44<T> translation(const float3& offset){
 			Mat44<T> ret = Mat44<T>::eye(); ret.setcol(float4(offset, T(1)), 3); return ret;
 		}
 		static Mat44<T> scale(float3 ratio){ Mat44<T> ret = Mat44<T>::eye(); for (int i = 0; i < 3; i++) ret[i][i] = ratio[i];	return ret; }
@@ -298,4 +356,117 @@ namespace redips{
 
 	typedef Mat33<float > Mat33f;
 	typedef Mat44<float > Mat44f;
+
+	template<typename T, int n>
+	class VecXd{
+		T val[n];
+	public:
+		const static int Dim = n;
+	public:
+		VecXd(std::initializer_list<T> values){
+			int mindim = std::min(n, int(values.size()));
+			int id = 0;
+			for (auto iter = values.begin(); iter != values.end() && id < n; ++iter, ++id){
+				val[id] = *iter;
+			}
+			for (; id < n; ++id) val[id] = T(0);
+		}
+		explicit VecXd(T v = T(0), int k = n){
+			for (int i = 0; i < k; ++i) val[i] = T(v);
+			for (int i = k; i < n; ++i) val[i] = T(0);
+		}
+		VecXd(const T* ary){ for (int i = 0; i < n; ++i) val[i] = ary[i]; }
+
+		const T& operator[](size_t idx) const {
+			_RUNTIME_ASSERT_(idx >= 0 && idx < Dim, "idx>=0&&idx<Dim");
+			return val[idx];
+		}
+		T& operator[](size_t idx) {
+			_RUNTIME_ASSERT_(idx >= 0 && idx < Dim, "idx>=0&&idx<Dim");
+			return val[idx];
+		}
+
+		T* ptr() { return &val[0]; };
+
+		void clear() { for (int i = 0; i < Dim; ++i) val[i] = T(0); }
+
+		template<class Q = T>
+		T dot(const VecXd<Q, n> &v) const {
+			T ret = 0;
+			for (int i = 0; i < n; ++i) ret += val[i] * v[i];
+			return ret;
+		};
+
+		T unit() const {
+			auto inv = 1.0 / norm();
+			return this->operator*(inv);
+		}
+
+		void normalize() {
+			auto inv = 1.0 / norm();
+			*this *= inv;
+		}
+
+		T norm2() const { return this->dot(*this); }
+
+		T norm() const { return sqrt(norm2()); }
+
+		VecXd<T, n> operator*(const VecXd<T, n>& another) const {
+			VecXd<T, n> ret;
+			for (int i = 0; i < n; ++i) ret[i] = val[i] * another[i];
+			return ret;
+		}
+		VecXd<T, n> operator*(const T& another) const {
+			VecXd<T, n> ret;
+			for (int i = 0; i < n; ++i) ret[i] = val[i] * another;
+			return ret;
+		}
+		const VecXd<T, n>& operator*=(const VecXd<T, n>& another){
+			for (int i = 0; i < n; ++i) val[i] *= another[i];
+			return *this;
+		}
+		const VecXd<T, n>& operator*=(const T& another){
+			for (int i = 0; i < n; ++i) val[i] *= another;
+			return *this;
+		}
+
+		VecXd<T, n> operator+(const VecXd<T, n>& another) const {
+			VecXd<T, n> ret;
+			for (int i = 0; i < n; ++i) ret[i] = val[i] + another[i];
+			return ret;
+		}
+		VecXd<T, n> operator+(const T& another) const {
+			VecXd<T, n> ret;
+			for (int i = 0; i < n; ++i) ret[i] = val[i] + another;
+			return ret;
+		}
+		const VecXd<T, n>& operator+=(const VecXd<T, n>& another) {
+			for (int i = 0; i < n; ++i) val[i] += another[i];
+			return *this;
+		}
+		const VecXd<T, n>& operator+=(const T& another) {
+			for (int i = 0; i < n; ++i) val[i] += another;
+			return *this;
+		}
+
+		VecXd<T, n> operator-(const VecXd<T, n>& another) const {
+			VecXd<T, n> ret;
+			for (int i = 0; i < n; ++i) ret[i] = val[i] - another[i];
+			return ret;
+		}
+		VecXd<T, n> operator-(const T& another) const {
+			VecXd<T, n> ret;
+			for (int i = 0; i < n; ++i) ret[i] = val[i] - another;
+			return ret;
+		}
+		const VecXd<T, n>& operator-=(const VecXd<T, n>& another) {
+			for (int i = 0; i < n; ++i) val[i] -= another[i];
+			return *this;
+		}
+		const VecXd<T, n>& operator-=(const T& another) {
+			for (int i = 0; i < n; ++i) val[i] -= another;
+			return *this;
+		}
+
+	};
 };

@@ -4,10 +4,17 @@
 * Description : opengl texture wrapper
 */
 #pragma once
-#include <GL/glew.h>
-#include "../Common/FImage.h"
 #include <fstream>
+#include <GL/glew.h>
+#include "../Geometry/sh.h"
+#include "../Common/FImage.h"
+
+#include <assert.h>
+
 namespace redips{
+	
+	using float9 = VecXd<float, 9>;
+
 	class glTexture{
 	public:
 		int3 dim;
@@ -24,10 +31,11 @@ namespace redips{
 			if (texId) glDeleteTextures(1, &texId);
 		}
 
-		void update(const BYTE* imgdata,GLuint level = 0){
+		void update(const void* imgdata,GLuint level = 0){
 			if (texture_type == GL_TEXTURE_TYPE::_2d_){
-				glBindTexture(GL_TEXTURE_2D,texId);
+				glBindTexture(GL_TEXTURE_2D, texId);
 				glTexSubImage2D(GL_TEXTURE_2D, level, 0, 0, dim.x, dim.y, Format, Type, imgdata);
+				glBindTexture(GL_TEXTURE_2D, 0);
 			}
 			else{
 			
@@ -53,13 +61,16 @@ namespace redips{
 
 			return texId;
 		}
+
 		GLuint create2d(int2 dim, GLint nInternalFormat, GLenum nFormat, GLenum nType, const void* gData){
 			if (texId) glDeleteTextures(1, &texId);
 			glGenTextures(1, &texId);
 			//GL_TEXTURE_2D_MULTISAMPLE
 			glBindTexture(GL_TEXTURE_2D, texId);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -75,6 +86,7 @@ namespace redips{
 
 			return texId;
 		}
+
 		GLuint create2d_msaa(int2 dim,GLuint format,GLuint nSamples){
 			if (texId) glDeleteTextures(1, &texId);
 			glGenTextures(1, &texId);
@@ -139,6 +151,167 @@ namespace redips{
 
 			return texId;
 		}
+		
+		//notice: 6 faces of cubemap must have the same size
+		GLuint createCubemap(const char* faces[6]) {
+			if (texId) glDeleteTextures(1, &texId);
+			glGenTextures(1, &texId);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, texId);
+
+			for (int i = 0; i < 6; ++i) {
+				redips::FImage img(faces[i]);
+				switch (img.bpp) {
+					case 24: {
+						this->InternalFormat = GL_RGBA32F;
+						this->Format = GL_RGB;
+						this->Type = GL_UNSIGNED_BYTE;
+						break;
+					}
+					case 32: {
+						this->InternalFormat = GL_RGBA32F;
+						this->Format = GL_RGBA;
+						this->Type = GL_UNSIGNED_BYTE;
+						break;
+					}
+					case 8: {
+						this->InternalFormat = GL_R32F;
+						this->Format = GL_R;
+						this->Type = GL_UNSIGNED_BYTE;
+						break;
+					}
+					default: {
+						printf("[glTexture] : unsupported image file,bpp is %d\n", img.bpp);
+						return 0;
+					}
+				}
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, InternalFormat, img.width, img.height, 0, Format, Type, img.ptr());
+			}
+
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_REPEAT);
+			return texId;
+		}
+
+		template<int SH_BAND_WIDTH>
+		GLuint createCubemap(const redips::VecXd<float, (SH_BAND_WIDTH + 1)*(SH_BAND_WIDTH + 1)>& light_r, 
+							 const redips::VecXd<float, (SH_BAND_WIDTH + 1)*(SH_BAND_WIDTH + 1)>& light_g, 
+			                 const redips::VecXd<float, (SH_BAND_WIDTH + 1)*(SH_BAND_WIDTH + 1)>& light_b, int imgsize = 32) {
+			if (texId) glDeleteTextures(1, &texId);
+
+			this->Format = GL_RGB;
+			this->Type = GL_UNSIGNED_BYTE;
+			this->InternalFormat = GL_RGBA32F;
+			this->dim = redips::int3(imgsize, imgsize, 6);
+
+			glGenTextures(1, &texId);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, texId);
+
+			for (int i = 0; i < 6; ++i) {
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, InternalFormat, imgsize, imgsize, 0, Format, Type, NULL);
+			}
+			
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+			updateCubemap<SH_BAND_WIDTH>(light_r, light_g, light_b);
+
+			return texId;
+		}
+
+		template<int SH_BAND_WIDTH>
+		void updateCubemap(const redips::VecXd<float, (SH_BAND_WIDTH + 1)*(SH_BAND_WIDTH + 1)>& light_r, 
+						   const redips::VecXd<float, (SH_BAND_WIDTH + 1)*(SH_BAND_WIDTH + 1)>& light_g, 
+			               const redips::VecXd<float, (SH_BAND_WIDTH + 1)*(SH_BAND_WIDTH + 1)>& light_b) {
+
+			redips::SphericalHarmonic::Basic<SH_BAND_WIDTH> sh_calculator;
+
+			if (!texId) return;
+			assert(dim.x == dim.y&&dim.x > 0);
+			int imgsize = dim.x;
+
+			glBindTexture(GL_TEXTURE_CUBE_MAP, texId);
+
+			unsigned char* imgptr = new unsigned char[imgsize * imgsize * 3];
+
+			float imgsize_inv = 1.0 / imgsize;
+			{   //GL_TEXTURE_CUBE_MAP_POSITIVE_X
+				auto ptr = imgptr;
+				for (int y = 0; y < imgsize; ++y) for (int x = 0; x < imgsize; ++x) {
+					auto dir = float3(1.0, y * imgsize_inv * 2 - 1, x*imgsize_inv * 2 - 1).unit();
+					auto decom = sh_calculator.YFromXYZ(dir.x, dir.y, dir.z);
+					*ptr++ = std::max(std::min(int(decom.dot(light_r) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_g) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_b) * 255), 255), 0);
+				}
+				glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, 0, 0, imgsize, imgsize, Format, Type, imgptr);
+			}
+			{   //GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+				auto ptr = imgptr;
+				for (int y = 0; y < imgsize; ++y) for (int x = 0; x < imgsize; ++x) {
+					auto dir = float3(-1.0, y*imgsize_inv * 2 - 1, 1 - x*imgsize_inv * 2).unit();
+					auto decom = sh_calculator.YFromXYZ(dir.x, dir.y, dir.z);
+					*ptr++ = std::max(std::min(int(decom.dot(light_r) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_g) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_b) * 255), 255), 0);
+				}
+				glTexSubImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, 0, 0, imgsize, imgsize, Format, Type, imgptr);
+			}
+			{   //GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+				auto ptr = imgptr;
+				for (int y = 0; y < imgsize; ++y) for (int x = 0; x < imgsize; ++x) {
+					auto dir = float3(1 - x*imgsize_inv * 2, 1.0, y*imgsize_inv * 2 - 1).unit()*-1;
+					auto decom = sh_calculator.YFromXYZ(dir.x, dir.y, dir.z);
+					*ptr++ = std::max(std::min(int(decom.dot(light_r) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_g) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_b) * 255), 255), 0);
+				}
+				glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, 0, 0, imgsize, imgsize, Format, Type, imgptr);
+			}
+			{   //GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+				auto ptr = imgptr;
+				for (int y = 0; y < imgsize; ++y) for (int x = 0; x < imgsize; ++x) {
+					auto dir = float3(1 - x*imgsize_inv * 2, -1.0, 1 - y*imgsize_inv * 2).unit()*-1;
+					auto decom = sh_calculator.YFromXYZ(dir.x, dir.y, dir.z);
+					*ptr++ = std::max(std::min(int(decom.dot(light_r) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_g) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_b) * 255), 255), 0);
+				}
+				glTexSubImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, 0, 0, imgsize, imgsize, Format, Type, imgptr);
+			}
+			{   //GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+				auto ptr = imgptr;
+				for (int y = 0; y < imgsize; ++y) for (int x = 0; x < imgsize; ++x) {
+					auto dir = float3(1 - x*imgsize_inv * 2, 1 - y*imgsize_inv * 2, 1).unit()*-1;
+					auto decom = sh_calculator.YFromXYZ(dir.x, dir.y, dir.z);
+					*ptr++ = std::max(std::min(int(decom.dot(light_r) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_g) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_b) * 255), 255), 0);
+				}
+				glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, 0, 0, imgsize, imgsize, Format, Type, imgptr);
+			}
+			{   //GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+				auto ptr = imgptr;
+				for (int y = 0; y < imgsize; ++y) for (int x = 0; x < imgsize; ++x) {
+					auto dir = float3(x*imgsize_inv * 2 - 1, 1 - y*imgsize_inv * 2, -1).unit()*-1;
+					auto decom = sh_calculator.YFromXYZ(dir.x, dir.y, dir.z);
+					*ptr++ = std::max(std::min(int(decom.dot(light_r) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_g) * 255), 255), 0);
+					*ptr++ = std::max(std::min(int(decom.dot(light_b) * 255), 255), 0);
+				}
+				glTexSubImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, 0, 0, imgsize, imgsize, Format, Type, imgptr);
+			}
+
+			delete[]imgptr;
+			//FImage::saveImage(imgptr, imgsize, imgsize, 3, "z1.bmp");
+			//memset(imgptr, 128, sizeof(unsigned char) * 3 * imgsize*imgsize);
+		}
+
 		GLuint create3d(int3 dim, GLuint internalFormat, GLuint format, GLuint type, const void* data){
 			if (texId) glDeleteTextures(1, &texId);
 			glGenTextures(1, &texId);
@@ -238,7 +411,7 @@ namespace redips{
 				flags.y = dim.y;
 				flags.z = cpp;
 			}
-			else{
+			else {
 			
 			}
 			return buffer;

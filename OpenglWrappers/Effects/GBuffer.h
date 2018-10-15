@@ -58,6 +58,7 @@ namespace redips{
 		}
 		void unbind(){ 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+			glClearColor(0.0, 0.0, 0.0, 1.0);
 			//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
 		glTexture& getTexture(_GL_GBUFFER_TEXTURE_TYPE_ type){

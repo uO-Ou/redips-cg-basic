@@ -33,7 +33,7 @@ namespace redips{
 			this->origion = this;
 			this->visitorCnt = 1;
 			useShader(shaderSource);
-
+			
 			this->model = model;
 			this->mesh = model->mesh_ptr();
 			meshFaceCnt.resize(MAX(mesh->groups.size(),mesh->mtllib.size()));
@@ -207,16 +207,24 @@ namespace redips{
 			drawAllMeshes();
 		};
 
-		const Triangles* model_ptr() const{ return this->model; }
+		const Triangles* model_ptr()  const{ return this->model; }
 
 		//shader uniforms
-	    void uniformMat44f(const char* name,const float* value){ 
+	    void uniformMat44f(const char* name, const float* value){ 
 			m_shader->Use();
 			glUniformMatrix4fv(glGetUniformLocation(m_shader->Program, name), 1, GL_FALSE, value); 
 		}
-		void uniformFloat3(const char* name,const redips::float3& value){
+		void uniformFloat3(const char* name, const redips::float3& value){
 			m_shader->Use();
 			glUniform3f(glGetUniformLocation(m_shader->Program, name), value.x, value.y, value.z);
+		}
+		void uniformFloat4(const char* name, const redips::float4& value) {
+			m_shader->Use();
+			glUniform4f(glGetUniformLocation(m_shader->Program, name), value.x, value.y, value.z, value.w);
+		}
+		void uniformFloat2(const char* name, const redips::float2& value) {
+			m_shader->Use();
+			glUniform2f(glGetUniformLocation(m_shader->Program, name), value.x, value.y);
 		}
 		void uniformFloat1(const char* name, float value){
 			m_shader->Use();

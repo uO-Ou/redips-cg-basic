@@ -5,7 +5,11 @@ in Pipe{
    vec3 Normal;
    vec3 FragPos;
    vec2 TexCoord;
+   vec4 FragPosInLightSpace;
 }fsInput;
+
+//shadow map
+uniform sampler2D depthTexture;
 
 //material
 uniform struct Material{
@@ -34,10 +38,26 @@ uniform int pointLightNumber, directionaLightNumber;
 //camera
 uniform vec3 cameraPosition;
 
-const float M = 8.0f;
-const float SpecularStrength = 0.2f;
+const float M = 16.0f;
+const float SpecularStrength = 0.5;
+
+const float bias = 0.0005;
 
 void main(){
+    //calculate shadow factor
+    vec3 proj = (fsInput.FragPosInLightSpace.xyz / fsInput.FragPosInLightSpace.w) * 0.5 + 0.5;
+    float shadow = 0.0; {
+        vec2 texelSize = 1.0 / textureSize(depthTexture, 0);
+        for(int x = -3; x <= 3; ++x) {
+            for(int y = -3; y <= 3; ++y) {
+                float pcfDepth = texture(depthTexture, proj.xy + vec2(x, y) * texelSize).r; 
+                shadow += proj.z - bias > pcfDepth ? 1.0 : 0.0;        
+            }    
+        }
+        shadow /= 49.0;
+    }
+	shadow = (1-shadow)*0.8+0.2;
+    //begin
     vec3 N = normalize(fsInput.Normal);
 
 	// Ambient
@@ -72,5 +92,8 @@ void main(){
 	if((material.flags&2u)==0) Diffuse *= material.diffuse;
 	else Diffuse *= (texture(material.diffuseTexture,fsInput.TexCoord).bgr * material.diffuse);
 	
-	color = vec4(Ambient+Diffuse+Specular,1.0f);
+	color = vec4((Ambient+Diffuse+Specular)*shadow,1.0f);
+
+	color = vec4(1-shadow,1-shadow,1-shadow,1.0f);
+
 }

@@ -77,6 +77,23 @@ namespace redips{
 			}
 		}
 
+		const char* query_last_capture_picture_name() { return strbuf; }
+
+		void capture(const char* picname,int nouse) {
+			GLint eReadType, eReadFormat;
+			glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &eReadFormat);
+			glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, &eReadType);
+
+			glReadPixels(0, 0, winsize.x, winsize.y, eReadFormat, eReadType, imgbuf);
+			CHECK_GL_ERROR("read pixels failed");
+			if (redips::FImage::saveImage(imgbuf, winsize.x, winsize.y, 4, picname)) {
+				printf("[glScreenCapture] : save picture [%s] success !\n", picname);
+			}
+			else {
+				printf("[glScreenCapture] : save picture [%s] failed !\n", picname);
+			}
+		}
+
 		void capture_depth(const char* picname){
 			glReadPixels(0, 0, winsize.x, winsize.y, GL_DEPTH_COMPONENT, GL_FLOAT, depbuf);
 			CHECK_GL_ERROR("read depth failed");

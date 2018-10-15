@@ -104,7 +104,7 @@ namespace redips{
 			cudaEventRecord(stop, 0);
 			cudaEventSynchronize(stop);
 			cudaEventElapsedTime(&elapsedTime, start, stop);
-			std::cout << "[Cuder] : launch finish. cost " << elapsedTime << "ms" << std::endl;
+			//std::cout << "[Cuder] : launch finish. cost " << elapsedTime << "ms" << std::endl;
 			return result;
 		}
 		bool addModule(std::string cufile){
@@ -126,7 +126,7 @@ namespace redips{
 				return false;
 			}
 		}
-		void applyArray(const char* name, size_t size, void* h_ptr=nullptr){
+		void applyArray(const char* name, size_t size, const void* h_ptr=nullptr){
 			if (devptrs.count(name)){
 				std::cerr << "[Cuder] : error: already has an array named " << name << std::endl;;
 				return;
@@ -137,7 +137,16 @@ namespace redips{
 				checkCudaErrors(cuMemcpyHtoD(d_ptr, h_ptr, size));
 			devptrs[name] = d_ptr;
 		}
-		void fetchArray(const char* name, size_t size,void * h_ptr){
+		void transferArray(const char* name, size_t size, const void* h_ptr = nullptr) {
+			if (!h_ptr) return;
+			if (!devptrs.count(name)) {
+				std::cerr << "[Cuder] : error: cannot find an array named " << name << std::endl;;
+				return;
+			}
+			CUdeviceptr d_ptr = devptrs[name];
+			checkCudaErrors(cuMemcpyHtoD(d_ptr, h_ptr, size));
+		}
+		void fetchArray(const char* name, size_t size, void * h_ptr){
 			if (!devptrs.count(name)){
 				std::cerr << "[Cuder] : error: doesn't exists an array named " << name << std::endl;;
 				return;

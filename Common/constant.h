@@ -17,7 +17,7 @@ namespace redips{
 };
 
 #ifndef PI
-#define PI 3.1415926f
+#define PI (3.1415926535897932)
 #endif
 
 #define PI_INV 0.31830989f
@@ -25,8 +25,8 @@ namespace redips{
 #define ANGLE_PER_RAD (57.29578f)
 #define RAD_PER_AGNEL (0.0174533f)
 
-#define RAD(angle) (angle*RAD_PER_AGNEL)
-#define ANGLE(rad) (rad*ANGLE_PER_RAD)
+#define RAD(angle) ((angle)*RAD_PER_AGNEL)
+#define ANGLE(rad) ((rad)*ANGLE_PER_RAD)
 
 #ifndef MAX
 #define MAX(a,b) (a)>=(b)?(a):(b)

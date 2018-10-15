@@ -89,6 +89,22 @@ namespace redips{
 		}
 		~PhC(){};
 		
+		void adjustIntrinsic(float vAov, float aspect/*width/height*/, float nearp, float farp) {
+			//resolution = int2((int)(576 * aspect), 576);
+			imageAspectRatio = filmAspectRatio = aspect;
+
+			/**************************************************
+			canvaSize.x = fabs(tan(RAD(hAov*0.5f)) * nearp * 2);
+			canvaSize.y = canvaSize.x / aspect;
+			**************************************************/
+			canvaSize.y = fabs(tan(RAD(vAov*0.5f)) * nearp * 2);
+			canvaSize.x = canvaSize.y * aspect;
+
+			filmSize = canvaSize;         //unknown,set to canvaSize
+			focalLength = fabs(nearp);    //unknown,set to nearp
+			updateIntrinsic();
+		}
+
 		//notice: focus-pos shouldn't coinline with up! this may not be left-hand base
 		void lookAt(const float3& pos, const float3& focus, const float3& up){
 			cameraZ = (pos - focus).unit();
@@ -174,9 +190,9 @@ namespace redips{
 		const Mat33f& c2w3() const { return camera2world3; }
 		const Mat44f& c2w4() const { return camera2world4; };
 		const Mat44f& w2c() const { return world2camera; }
-		const Mat44f& glProjection() const { return projection.transpose(); };
-		const Mat44f& glView() const { return world2camera.transpose(); };
-		const Mat44f& glProjectionView() { return (projection*world2camera).transpose(); };
+		Mat44f glProjection() const { return projection.transpose(); };
+		Mat44f glView() const { return world2camera.transpose(); };
+		Mat44f glProjectionView() { return (projection*world2camera).transpose(); };
 		
 		//get pixel position in world-space
 		float3 getPixelWPos(int x,int y){
