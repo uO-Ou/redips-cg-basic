@@ -5,8 +5,8 @@ class DeferredRenderer : public redips::GBuffer{
 public:
 	DeferredRenderer(int width,int height) : GBuffer(width,height){
 		char strbuf[512];
-		//sprintf_s(strbuf, "%s/OpenglWrappers/Effects/DeferredRenderer", _REDIPS_ROOT_PATH_);
-		sprintf_s(strbuf, "%s/OpenglWrappers/Effects/ssao", _REDIPS_ROOT_PATH_);
+		sprintf_s(strbuf, "%s/OpenglWrappers/Effects/DeferredRenderer", _REDIPS_ROOT_PATH_);
+		//sprintf_s(strbuf, "%s/OpenglWrappers/Effects/ssao", _REDIPS_ROOT_PATH_);
 		useShader(redips::ShaderSource(strbuf));
 	}
 	~DeferredRenderer(){};

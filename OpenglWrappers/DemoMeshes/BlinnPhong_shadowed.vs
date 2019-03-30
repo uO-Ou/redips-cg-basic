@@ -5,9 +5,11 @@ layout (location = 2) in vec2 texcoord;
 
 uniform mat4 model;
 uniform mat4 projection_view;
+uniform mat4 light_space_ort_projection_view;
 
 out Pipe{
 	vec3 FragPos;
+	vec3 LightSpaceProjPos;
 	vec2 TexCoord;
 	vec3 Normal;
 }vsOutput;
@@ -15,6 +17,8 @@ out Pipe{
 void main(){
 	  vec4 inworld = model * vec4(position,1.0f);
 	  vsOutput.FragPos = inworld.xyz;
+
+	  vsOutput.LightSpaceProjPos = (light_space_ort_projection_view * inworld).xyz * 0.5f + 0.5f;
 
 	  vsOutput.TexCoord = texcoord;
 	  

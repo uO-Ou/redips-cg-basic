@@ -67,11 +67,11 @@ namespace redips {
 		}
 
 		static std::string trim(const std::string& str){
-			int id1 = 0;  while (id1 < str.length()){ if (str[id1] == ' ' || str[id1] == '\t' || str[id1] == '\n') id1++; else break; }
+			int id1 = 0;  while (id1 < str.length()){ if (str[id1] == ' ' || str[id1] == '\t' || str[id1] == '\n' || str[id1] == '\r') id1++; else break; }
 			if (id1 == str.length()) return "";
 
-			int id2 = str.length() - 1; while (id2>id1){ if (str[id2] == ' ' || str[id2] == '\t' || str[id2] == '\n') id2--;  else break; }
-			return str.substr(id1,id2-id1+1);
+			int id2 = str.length() - 1; while (id2>id1){ if (str[id2] == ' ' || str[id2] == '\t' || str[id2] == '\n' || str[id2] == '\r') id2--;  else break; }
+			return str.substr(id1, id2 - id1 + 1);
 		}
 
 		static std::string lowercase(const std::string& str) {

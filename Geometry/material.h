@@ -23,7 +23,7 @@ namespace redips{
 			transparency = 1.0f;
 			shininess = 0.0f;
 			illum = 1;
-			texture_ka = texture_kd = nullptr;
+			texture_ka = texture_kd = texture_bump = nullptr;
 		};
 
 		float3 tex_diffuse(float u, float v) const{
@@ -47,7 +47,7 @@ namespace redips{
 	public:
 		std::string name;
 		float3 ambient, diffuse, specular;
-		FImage *texture_ka, *texture_kd;
+		FImage *texture_ka, *texture_kd, *texture_bump;
 		float transparency;
 		float shininess;
 		int illum;
@@ -121,7 +121,7 @@ namespace redips{
 					fin >> fptr->x >> fptr->y >> fptr->z;
 				}
 				else if (buff == "map_Ka"){
-					std::getline(fin, buff);
+					std::getline(fin, buff); 
 					buff = STRING_UTIL.trim(buff);
 					if (buff[1] != ':'){     //not a absolute path
 						buff = basepath + buff;
@@ -141,7 +141,7 @@ namespace redips{
 				}
 				else if (buff == "map_Kd"){
 					std::getline(fin,buff);
-					buff = STRING_UTIL.trim(buff);
+					buff = STRING_UTIL.trim(buff); 
 					if (buff[1] != ':'){     //not a absolute path
 						buff = basepath + buff;
 					}
@@ -155,6 +155,25 @@ namespace redips{
 					if (flag){
 						FImage* newImage = new FImage(buff.c_str());
 						mtls[mtls.size() - 1]->texture_kd = newImage;
+						loadedImage[buff] = newImage;
+					}
+				}
+				else if (buff == "bump") {
+					std::getline(fin, buff);
+					buff = STRING_UTIL.trim(buff);
+					if (buff[1] != ':') {     //not a absolute path
+						buff = basepath + buff;
+					}
+					bool flag = true;
+					for (auto var = loadedImage.begin(); var != loadedImage.end(); var++) {
+						if (var->first == buff) {
+							mtls[mtls.size() - 1]->texture_bump = var->second;
+							flag = false; break;
+						}
+					}
+					if (flag) {
+						FImage* newImage = new FImage(buff.c_str());
+						mtls[mtls.size() - 1]->texture_bump = newImage;
 						loadedImage[buff] = newImage;
 					}
 				}

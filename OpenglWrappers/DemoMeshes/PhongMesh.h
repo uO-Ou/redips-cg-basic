@@ -25,6 +25,7 @@ namespace redips{
 				useShader(strbuf);
 			}
 		}
+		PhongMesh(const PhongMesh&) = delete;
 		~PhongMesh(){};
 	};
 };

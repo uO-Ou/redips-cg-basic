@@ -44,7 +44,7 @@ namespace redips {
 			};
 
 			SHLightingMesh(const glMeshWrapper& another, redips::ShaderSource shaderSource = redips::ShaderSource()) = delete;
-
+			SHLightingMesh(const SHLightingMesh&) = delete;
 			~SHLightingMesh() { 
 				glDeleteBuffers(mesh->groups.size(), vbos_4_shcoefs_gpu); 
 			}

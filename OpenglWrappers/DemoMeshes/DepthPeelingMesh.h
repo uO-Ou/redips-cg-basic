@@ -25,6 +25,7 @@ namespace redips{
 				useShader(strbuf);
 			}
 		}
+		DepthPeelingBlinnPhongMesh(const DepthPeelingBlinnPhongMesh&) = delete;
 		void setTextures(redips::glTexture& deptex,redips::glTexture& coltex){
 			m_shader->Use();
 			

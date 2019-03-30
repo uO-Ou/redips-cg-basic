@@ -9,7 +9,7 @@ namespace redips{
 		enum class _GL_GBUFFER_TEXTURE_TYPE_ { _position_, _normal_, _albedo_spec_,_texture_cnt_ };
 		GLuint quardVao = 0, quardVbo = 0;
 		Shader deferredShader;
-		void useShader(redips::ShaderSource& source){
+		void useShader(const redips::ShaderSource& source){
 			if (source.sourceType == ShaderSource::SourceType::_exists_program_){
 				deferredShader = Shader(source.value.program);
 			}

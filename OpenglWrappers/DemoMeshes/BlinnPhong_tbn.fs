@@ -4,7 +4,7 @@ out vec4 color;
 in Pipe{
 	vec3 FragPos;
 	vec2 TexCoord;
-	vec3 Normal;
+	mat3 TBN;
 }fsInput;
 
 //material
@@ -13,6 +13,7 @@ uniform struct Material{
 	vec3 diffuse,ambient;
 	sampler2D diffuseTexture;
 	sampler2D ambientTexture;
+	sampler2D normalTexture;
 }material;
 
 //lights
@@ -39,8 +40,16 @@ const float SpecularStrength = 0.2f;
 const float gamma = 2.2f;
 
 void main(){
-	vec3 N = normalize(fsInput.Normal);
-	
+	vec3 N;
+	if((material.flags&4u)==0){
+		N = normalize(fsInput.TBN[2]);
+	}
+	else{
+		N = texture(material.normalTexture, fsInput.TexCoord).bgr;
+		N = /*normalize*/(N * 2.0 - 1.0);
+		N = normalize(fsInput.TBN * N);
+	}
+
 	// Ambient
 	vec3 Ambient = vec3(0,0,0);
 	if((material.flags&1u)==0) Ambient = material.ambient;

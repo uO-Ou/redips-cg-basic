@@ -6,13 +6,14 @@
 */
 #include <map>
 #include <string>
+#include <OpenglWrappers/glslShaderWrapper.h>
 
 namespace redips{
 	class QuadMesh{
 		GLuint quardVao = 0, quardVbo = 0;
 
 		Shader shader;
-		void useShader(redips::ShaderSource& source){
+		void useShader(const redips::ShaderSource& source){
 			if (source.sourceType == ShaderSource::SourceType::_exists_program_){
 				shader = Shader(source.value.program);
 			}
@@ -37,6 +38,7 @@ namespace redips{
 
 			useShader(redips::ShaderSource(shader_path.c_str()));
 		}
+		QuadMesh(const QuadMesh&) = delete;
 		~QuadMesh(){
 			glDeleteBuffers(1, &quardVbo);
 			glDeleteVertexArrays(1, &quardVao);

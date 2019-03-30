@@ -113,7 +113,7 @@ namespace redips {
 					auto theta = acos(sqrt(x)) * 2; //0 - PI
 					auto phi = (2 * y) * PI;        //0 - 2PI
 
-					auto sh = sh_calculator.YFromTP(theta, phi);
+					auto sh = YFromTP(theta, phi);
 					{
 						int h = height * theta / PI + 0.5; h = CLAMP(h, 0, height - 1);
 						int w = width * y + 0.5; w = CLAMP(w, 0, width - 1);

@@ -33,6 +33,7 @@ namespace redips{
 			useShader(strbuf);
 			mbox = this->model_ptr()->aabb_T();
 		}
+		VoxelMesh(const VoxelMesh&) = delete;
 		~VoxelMesh(){
 			glDeleteBuffers(1,&count_ssbo);
 		};

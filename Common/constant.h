@@ -7,7 +7,7 @@
 
 //important! 
 //_REDIPS_ROOT_PATH_ indicates where to find redips-related resources, such as vs/fs shaders
-#define _REDIPS_ROOT_PATH_ "E:/Documents/CG/CGLib/redips"
+#define _REDIPS_ROOT_PATH_ "D:/documents/MyCode/libs/redips"
 
 namespace redips{
 	enum class MODEL_TYPE{ _sphere_, _triangle_, _panel_ };

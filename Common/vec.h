@@ -165,6 +165,16 @@ namespace redips{
 		Vec3<T>& operator-= (const T v) { x -= v, y -= v, z -= v; return *this; };
 		Vec3<T>& operator-= (const Vec3<T> &v) { x -= v.x, y -= v.y, z -= v.z; return *this; };
 
+		Vec3<T> flip() const{
+			///return Vec3<T>(0, 0, 0);
+			if (fabs(x) <= fabs(y) && fabs(x) <= fabs(z))
+				return Vec3<T>(0, -z, y);
+			if (fabs(y) <= fabs(x) && fabs(y) <= fabs(z))
+				return Vec3<T>(-z, 0, x);
+			else
+				return Vec3<T>(-y, x, 0);
+		}
+
 		static Vec3<T> bits(unsigned int value){ return Vec3<T>(T((value & 4) > 0), T((value & 2) > 0), T((value & 1) > 0)); }
 
 		/*

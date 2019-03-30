@@ -13,6 +13,7 @@ namespace redips{
 				useShader(strbuf);
 			}
 		};
+		
 		GBufferMesh(const glMeshWrapper& another, redips::ShaderSource shaderSource = redips::ShaderSource()) : glMeshWrapper(another, shaderSource){
 			bindVaoAttribData(0, 1, 2);
 			if (shaderSource.sourceType == redips::ShaderSource::SourceType::_null_){
@@ -21,7 +22,9 @@ namespace redips{
 				useShader(strbuf);
 			}
 		}
-
+		
+		GBufferMesh(const GBufferMesh&) = delete;
+		
 		void draw(){
 			if (!m_shader) { std::cerr << "shader error" << std::endl; return; };
 			m_shader->Use();

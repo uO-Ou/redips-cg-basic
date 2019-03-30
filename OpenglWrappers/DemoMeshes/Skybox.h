@@ -11,7 +11,8 @@ namespace redips {
 			SkyBoxMesh(const redips::Triangles* model): glMeshWrapper(model, redips::ShaderSource()) {
 				bindVaoAttribData(0, -1, -1);
 			};
-			SkyBoxMesh(const glMeshWrapper& another) = delete;
+			SkyBoxMesh(const glMeshWrapper&) = delete;
+			SkyBoxMesh(const SkyBoxMesh&) = delete;
 		};
 
 		Shader cubemapShader;

@@ -123,6 +123,19 @@ namespace redips{
 			}
 			//int keydown(){ return keyRecorder.getKey(); };
 			void closeWindow(){ glfwSetWindowShouldClose(window, GL_TRUE); }
+
+			unsigned int CURSOR_MODE = GLFW_CURSOR_DISABLED;
+			void swapCursorMode() {
+				if (CURSOR_MODE == GLFW_CURSOR_DISABLED) 
+					glfwSetInputMode(window, GLFW_CURSOR, CURSOR_MODE = GLFW_CURSOR_NORMAL);
+				else
+					glfwSetInputMode(window, GLFW_CURSOR, CURSOR_MODE = GLFW_CURSOR_DISABLED);
+			}
+
+			void setCursorMode(int mode) {
+				glfwSetInputMode(window, GLFW_CURSOR, CURSOR_MODE = mode);
+			}
+
 		private:
 			static App* instance;
 			static GLFWwindow* window;
@@ -146,7 +159,7 @@ namespace redips{
 				glfwSetMouseButtonCallback(window, mouse_click_callback);
 				// Options
 				//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				glfwSetInputMode(window, GLFW_CURSOR, CURSOR_MODE);
 
 				// Initialize GLEW to setup the OpenGL Function pointers
 				glewExperimental = GL_TRUE;

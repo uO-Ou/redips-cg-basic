@@ -105,6 +105,14 @@ namespace redips{
 			glDeleteShader(vertex);
 			glDeleteShader(fragment);
 		}
+		Shader(const ShaderSource& shader_source) {
+			if (shader_source.sourceType == ShaderSource::SourceType::_exists_program_) {
+				this->Program = shader_source.value.program;
+			}
+			else if (shader_source.sourceType == ShaderSource::SourceType::_from_file_) {
+				Shader::Shader(shader_source.vertexShaderPath().c_str(), shader_source.fragmentShaderPath().c_str());
+			}
+		}
 		void CreateFromCode(const GLchar* vShaderCode, const GLchar* fShaderCode) {
 			// Compile shaders
 			GLuint vertex, fragment;

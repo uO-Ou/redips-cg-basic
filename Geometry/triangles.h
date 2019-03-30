@@ -11,6 +11,8 @@
 #pragma once
 #include "model.h"
 
+//#define _LDEBUG
+
 namespace redips{
 	class Mesh{
 		friend class Triangles;
@@ -44,6 +46,7 @@ namespace redips{
 	public:
 		Mesh(const char* file){
 			clean();
+
 			groups.push_back(FGroup("default", 0, 0));
 			int curGid = 0;
 			std::string basepath = ""; {
@@ -54,7 +57,7 @@ namespace redips{
 					basepath = std::string(file).substr(0, tid + 1);
 				}
 			}
-			std::ifstream fin(file);
+			std::ifstream fin(file, std::ios::binary);
 			if (!fin.is_open()){
 				std::cerr << "load obj file-" << file << " failed" << std::endl;
 				return;
@@ -64,7 +67,7 @@ namespace redips{
 
 			//load file to memory
 			auto _size = fin.seekg(0, std::ios::end).tellg();
-			char* _buf = new char[_size];
+			char* _buf = new char[int(_size) + 1]; _buf[int(_size)] = '\0';
 			fin.seekg(0, std::ios::beg).read(_buf, static_cast<std::streamsize>(_size));
 			fin.close();
 
@@ -73,7 +76,7 @@ namespace redips{
 				std::stringstream sin(std::move(_buf));
 				std::string curMtllib = "";
 				char str[1024];
-				while (sin.getline(str,1024)){
+				while (sin.getline(str, 1024)){
 					if (STRING_UTIL.startwith(str,"v ")){
 						vertices.push_back(STRING_UTIL.split2Float3(str));
 						//sscanf_s(str + 2, "%f %f %f", &f3.x, &f3.y, &f3.z);

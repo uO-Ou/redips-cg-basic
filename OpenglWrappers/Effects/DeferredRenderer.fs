@@ -8,5 +8,5 @@ uniform sampler2D positionTexture;
 uniform sampler2D materialTexture;
 
 void main(){
-     color = vec4(texture(normalTexture,texcoord).bgr,1.0);
+     color = vec4(texture(materialTexture,texcoord).bgr,1.0);
 } 

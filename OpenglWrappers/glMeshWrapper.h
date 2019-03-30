@@ -1,10 +1,11 @@
 /*
 * Author : redips redips.xin@gmail.com
-* Date : 2017.12.15
+* Date : 2017.12.15 2019.3.5
 * Description : opengl mesh wrapper
-		a. if option& 1 == 1, setup per mtl, else per group; 
+		a. if option & 1 == 1, setup per mtl, else per group; 
 		   if option & 2 == 1, generate geometry normal, else use normal from obj file
 		   if option & 4 == 1, generate mipmap texture
+		   if option & 8 == 1, generate tangent vector
 		b. when delete a glMeshWrapper, release vbo/textures if only its' visitorCnt<=0 
 
 bug: row 63,what if a .mtl has noused mtl
@@ -22,8 +23,10 @@ namespace redips{
 			static const unsigned int _default_ = 1u;
 			static const unsigned int _geNormal_ = 2u;
 			static const unsigned int _genMipmap_ = 4u;
+			static const unsigned int _genTangent_ = 8u;
+
 			WrapOption(){ value = _default_; }
-			WrapOption(unsigned int value) :value(value){};
+			WrapOption(unsigned int value) : value(value){};
 		private:
 			unsigned int value;
 			operator unsigned int(){ return value; };
@@ -41,6 +44,7 @@ namespace redips{
 			setup_type = option & WrapOption::_default_;
 			bool genGeoNormal = (option & WrapOption::_geNormal_);
 			bool genMipmapTexture = (option & WrapOption::_genMipmap_);
+			bool genTangent = (option & WrapOption::_genTangent_);
 
 			// check if groups with same mtl have same face-type
 			if (setup_type){
@@ -84,6 +88,8 @@ namespace redips{
 			vertexBuffer = new float[maxFaceCnt * 3 * 3];
 			texcoordBuffer = new float[maxFaceCnt * 3 * 2];
 			normalBuffer = new float[maxFaceCnt * 3 * 3];
+			if (genTangent)
+				tangentBuffer = new float[maxFaceCnt * 3 * 3];
 
 			//generate vaos/vbos, copy data to gpu
 			vaos = new GLuint[meshCnt];
@@ -92,8 +98,8 @@ namespace redips{
 			vbos = new GLuint[meshCnt];
 			glGenBuffers(meshCnt, vbos);
 
-			if (setup_type) setup_permtl(genGeoNormal);
-			else setup_pergroup(genGeoNormal);
+			if (setup_type) setup_permtl(genGeoNormal, genTangent);
+			else setup_pergroup(genGeoNormal, genTangent);
 
 			//generate textures
 			textureCnt = mesh->mtllib.loadedImage.size();
@@ -106,11 +112,12 @@ namespace redips{
 				}
 			}
 
-			if (vertexBuffer) delete[]vertexBuffer;
-			if (texcoordBuffer) delete[]texcoordBuffer;
-			if (normalBuffer) delete[]normalBuffer;
+			if (vertexBuffer) delete[] vertexBuffer;
+			if (texcoordBuffer) delete[] texcoordBuffer;
+			if (normalBuffer) delete[] normalBuffer;
+			if (tangentBuffer) delete[] tangentBuffer;
 		}
-		glMeshWrapper(const glMeshWrapper& another, ShaderSource& shaderSource){
+		glMeshWrapper(const glMeshWrapper& another, const ShaderSource& shaderSource){
 			this->origion = another.origion;
 			this->origion->visitorCnt++;
 			useShader(shaderSource);
@@ -118,6 +125,7 @@ namespace redips{
 			this->model = another.model;
 			this->mesh = model->mesh_ptr();
 			this->setup_type = another.setup_type;
+			this->hasTangent = another.hasTangent;
 			this->meshCnt = another.meshCnt;
 			this->textureCnt = 0;
 
@@ -152,20 +160,24 @@ namespace redips{
 			}
 			if (vbos) delete[] vbos;
 		}
-		void bindVaoAttribData(GLint positionLoc = 0, GLint normalLoc = 1, GLint texcoordLoc = 2){
+		void bindVaoAttribData(GLint positionLoc = 0, GLint normalLoc = 1, GLint texcoordLoc = 2, GLint tangentLoc = -1){
 			for (int i = 0; i < meshCnt; i++){
 				if (meshFaceCnt[i] <= 0) continue;
 				glBindVertexArray(vaos[i]);
 				glBindBuffer(GL_ARRAY_BUFFER, vbos[i]);
 				glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 				glEnableVertexAttribArray(positionLoc);
-				if (meshFaceTypes[i] >= GROUP_FACE_TYPE::_withnormal_&&normalLoc != -1){
+				if (meshFaceTypes[i] >= GROUP_FACE_TYPE::_withnormal_ && normalLoc != -1){
 					glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(sizeof(float)*(meshFaceCnt[i] * 3 * 3)));
 					glEnableVertexAttribArray(normalLoc);
 				}
-				if (meshFaceTypes[i] == GROUP_FACE_TYPE::_withtex_&&texcoordLoc != -1){
+				if (meshFaceTypes[i] == GROUP_FACE_TYPE::_withtex_ && texcoordLoc != -1){
 					glVertexAttribPointer(texcoordLoc, 2, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(sizeof(float)*(meshFaceCnt[i] * 3 * 6)));
 					glEnableVertexAttribArray(texcoordLoc);
+				}
+				if (meshFaceTypes[i] == GROUP_FACE_TYPE::_withtex_ && hasTangent && tangentLoc != -1) {
+					glVertexAttribPointer(tangentLoc, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(sizeof(float)*(meshFaceCnt[i] * 3 * 8)));
+					glEnableVertexAttribArray(tangentLoc);
 				}
 			}
 			glBindVertexArray(0);
@@ -253,12 +265,15 @@ namespace redips{
 
 		Shader* m_shader = nullptr;
 	private:
-		void setup_pergroup(bool genGeometryNormal){
-			int SIZE_PER_VERT[] = { 0, 3 /*_single_*/, 3 + 3/*_withnormal_*/, 3 + 2 + 3/*_withtex_*/ };
+		bool hasTangent = false;
+
+		void setup_pergroup(bool genGeometryNormal, bool genTangent){
+			int SIZE_PER_VERT[] = { 0, 3 /*_single_*/, 3 + 3/*_withnormal_*/, 3 + 2 + 3/*_withtex_*/, 3 + 2 + 3 + 3/*_withtangent_*/ };
 			//copy data
 			const std::vector<float3>& vertices = mesh->vertices;
 			const std::vector<float3>& normals = mesh->normals;
 			const std::vector<float3>& texcoords = mesh->texcoords;
+
 			for (int i = 0; i < meshCnt; i++){
 				//copy vertices-coords, type is float3
 				int faceCnt = meshFaceCnt[i];
@@ -306,39 +321,74 @@ namespace redips{
 						(*ptrf2++) = (texcoords[indices.z].vec2());
 					}
 				}
+				//generate tangent vector if needed
+				if (meshFaceTypes[i] == GROUP_FACE_TYPE::_withtex_ && genTangent) {
+					auto vp = (float3*)vertexBuffer;
+					auto tp = (float2*)texcoordBuffer;
+					auto np = (float3*)normalBuffer;
+					auto taptr = (float3*)tangentBuffer;
+					for (int fid = 0; fid < faceCnt; ++fid) {
+						auto edge1 = vp[1] - vp[0];
+						auto edge2 = vp[2] - vp[0];
+						auto uv1 = tp[1] - tp[0];
+						auto uv2 = tp[2] - tp[0];
+
+						auto det = uv1.x*uv2.y - uv2.x*uv1.y;
+						//assert(fabs(det) > 1e-5);
+						if (fabs(det) > 1e-5) {
+							det = 1.0 / det;
+
+							auto T = edge1 * (uv2.y*det) + edge2 * (-det * uv1.y);
+
+							taptr[0] = taptr[1] = taptr[2] = T.unit();
+						}
+						else {
+							taptr[0] = np[0].flip().unit();
+							taptr[1] = np[1].flip().unit();
+							taptr[2] = np[2].flip().unit();
+						}
+
+						vp += 3, tp += 3, np += 3, taptr += 3;
+					}
+					hasTangent = true;
+				}
+				else hasTangent = false;
 
 				//copy data to gpu
 				glBindBuffer(GL_ARRAY_BUFFER, vbos[i]);
-				glBufferData(GL_ARRAY_BUFFER, faceCnt * 3 * SIZE_PER_VERT[int(meshFaceTypes[i])] * sizeof(float), NULL, GL_STATIC_DRAW);
+				glBufferData(GL_ARRAY_BUFFER, faceCnt * 3 * SIZE_PER_VERT[int(meshFaceTypes[i]) + (hasTangent ? 1 : 0)] * sizeof(float), NULL, GL_STATIC_DRAW);
 				glBufferSubData(GL_ARRAY_BUFFER, 0, faceCnt * 3 * 3 * sizeof(float), vertexBuffer);
 				if (meshFaceTypes[i] >= GROUP_FACE_TYPE::_withnormal_) glBufferSubData(GL_ARRAY_BUFFER, faceCnt * 3 * 3 * sizeof(float), faceCnt * 3 * 3 * sizeof(float), normalBuffer);
 				if (meshFaceTypes[i] == GROUP_FACE_TYPE::_withtex_) glBufferSubData(GL_ARRAY_BUFFER, faceCnt * 3 * 6 * sizeof(float), faceCnt * 3 * 2 * sizeof(float), texcoordBuffer);
+				if (meshFaceTypes[i] == GROUP_FACE_TYPE::_withtex_&&hasTangent) glBufferSubData(GL_ARRAY_BUFFER, faceCnt * 3 * 8 * sizeof(float), faceCnt * 3 * 3 * sizeof(float), tangentBuffer);
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
 				//std::cout << "[glMeshWrapper] : " << mesh->groups[i].name << " transfered" << std::endl;
 			}
 			std::cout << "[glMeshWrapper] : copy mesh to gpu finish" << std::endl;
 		}
-		void setup_permtl(bool genGeometryNormal){
-			int SIZE_PER_VERT[] = { 0, 3 /*_single_*/, 3 + 3/*_withnormal_*/, 3 + 2 + 3/*_withtex_*/ };
+		void setup_permtl(bool genGeometryNormal, bool genTangent){
+			int SIZE_PER_VERT[] = { 0, 3 /*_single_*/, 3 + 3/*_withnormal_*/, 3 + 2 + 3/*_withtex_*/, 3 + 2 + 3 + 3/*_withtangent_*/ };
 			//copy data
 			const std::vector<float3>& vertices = mesh->vertices;
 			const std::vector<float3>& normals = mesh->normals;
 			const std::vector<float3>& texcoords = mesh->texcoords;
 
-			for (int i = 0; i < meshCnt; i++){
+			for (int i = 0; i < meshCnt; ++i){
 				if (meshFaceCnt[i] <= 0) continue;
 				GROUP_FACE_TYPE mtype = meshFaceTypes[i];
-				float3 *vptr = (float3*)(vertexBuffer);
-				float3 *nptr = (float3*)(normalBuffer);
-				float2 *tptr = (float2*)(texcoordBuffer);
 
-				for (int j = 0; j < mesh->groups.size(); j++){
+				float3 *vptr  = (float3*)(vertexBuffer);
+				float3 *nptr  = (float3*)(normalBuffer);
+				float2 *tptr  = (float2*)(texcoordBuffer);
+				float3 *taptr = (float3*)(tangentBuffer);
+
+				for (int j = 0; j < mesh->groups.size(); ++j){
 					if (mesh->groups[j].mtlId != i) continue;
 					int faceCnt = mesh->groups[j].faceCnt;
 					if (faceCnt <= 0) continue;
 
 					int fid = mesh->groups[j].fsid;
-					for (int feid = fid + faceCnt; fid < feid; fid++){
+					for (int feid = fid + faceCnt; fid < feid; ++fid){
 						const int3& indices = mesh->faces_v[fid];
 						(*vptr++) = vertices[indices.x];
 						(*vptr++) = vertices[indices.y];
@@ -347,7 +397,7 @@ namespace redips{
 					//copy normals if exists, type float3
 					if (mtype >= GROUP_FACE_TYPE::_withnormal_ && genGeometryNormal == false){
 						int nid = mesh->groups[j].nsid;
-						for (int neid = nid + faceCnt; nid < neid; nid++){
+						for (int neid = nid + faceCnt; nid < neid; ++nid){
 							const int3& indices = mesh->faces_vn[nid];
 							(*nptr++) = normals[indices.x];
 							(*nptr++) = normals[indices.y];
@@ -358,7 +408,7 @@ namespace redips{
 					else if (genGeometryNormal){
 						float3* ptrf3 = (float3*)(normalBuffer);
 						float3* vptrf3 = (float3*)(vertexBuffer);
-						for (int vid = 0; vid < faceCnt; vid++){
+						for (int vid = 0; vid < faceCnt; ++vid){
 							float3 edg1 = vptrf3[1] - vptrf3[0];
 							float3 edg2 = vptrf3[2] - vptrf3[1];
 							float3 norm = (edg1 ^ edg2).unit();
@@ -370,20 +420,51 @@ namespace redips{
 					//copy tex-coords if exists, type float2
 					if (mtype == GROUP_FACE_TYPE::_withtex_){
 						int tid = mesh->groups[j].tsid;
-						for (int teid = tid + faceCnt; tid < teid; tid++) {
+						for (int teid = tid + faceCnt; tid < teid; ++tid) {
 							const int3& indices = mesh->faces_vt[tid];
 							(*tptr++) = (texcoords[indices.x].vec2());
 							(*tptr++) = (texcoords[indices.y].vec2());
 							(*tptr++) = (texcoords[indices.z].vec2());
 						}
 					}
+					//generate tangent vector if needed
+					if (mtype == GROUP_FACE_TYPE::_withtex_ && genTangent) {
+						auto vp = vptr - faceCnt * 3;
+						auto tp = tptr - faceCnt * 3;
+						auto np = nptr - faceCnt * 3;
+						for (int fid = 0; fid < faceCnt; ++fid) {
+							auto edge1 = vp[1] - vp[0];
+							auto edge2 = vp[2] - vp[0];
+							auto uv1   = tp[1] - tp[0];
+							auto uv2   = tp[2] - tp[0];
+
+							auto det = uv1.x*uv2.y - uv2.x*uv1.y;
+							if (fabs(det) > 1e-5) {
+								det = 1.0 / det;
+
+								auto T = edge1 * (uv2.y*det) + edge2 * (-det * uv1.y);
+
+								taptr[0] = taptr[1] = taptr[2] = T.unit();
+							}
+							else {
+								taptr[0] = np[0].flip().unit();
+								taptr[1] = np[1].flip().unit();
+								taptr[2] = np[2].flip().unit();
+							}
+
+							vp += 3, tp += 3, np += 3, taptr += 3;
+						}
+						hasTangent = true;
+					}
+					else hasTangent = false;
 				}
 				//copy data to gpu
 				glBindBuffer(GL_ARRAY_BUFFER, vbos[i]);
-				glBufferData(GL_ARRAY_BUFFER, meshFaceCnt[i] * 3 * SIZE_PER_VERT[int(mtype)] * sizeof(float), NULL, GL_STATIC_DRAW);
+				glBufferData(GL_ARRAY_BUFFER, meshFaceCnt[i] * 3 * SIZE_PER_VERT[int(mtype) + (hasTangent ? 1 : 0)] * sizeof(float), NULL, GL_STATIC_DRAW);
 				glBufferSubData(GL_ARRAY_BUFFER, 0, meshFaceCnt[i] * 3 * 3 * sizeof(float), vertexBuffer);
 				if (meshFaceTypes[i] >= GROUP_FACE_TYPE::_withnormal_) glBufferSubData(GL_ARRAY_BUFFER, meshFaceCnt[i] * 3 * 3 * sizeof(float), meshFaceCnt[i] * 3 * 3 * sizeof(float), normalBuffer);
 				if (meshFaceTypes[i] == GROUP_FACE_TYPE::_withtex_) glBufferSubData(GL_ARRAY_BUFFER, meshFaceCnt[i] * 3 * 6 * sizeof(float), meshFaceCnt[i] * 3 * 2 * sizeof(float), texcoordBuffer);
+				if (meshFaceTypes[i] == GROUP_FACE_TYPE::_withtex_&&hasTangent) glBufferSubData(GL_ARRAY_BUFFER, meshFaceCnt[i] * 3 * 8 * sizeof(float), meshFaceCnt[i] * 3 * 3 * sizeof(float), tangentBuffer);
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
 				//std::cout << "[glMeshWrapper] : " << mesh->mtllib[i]->name << " transfered" << std::endl;
 			}
@@ -398,6 +479,7 @@ namespace redips{
 		float* vertexBuffer = nullptr;
 		float* normalBuffer = nullptr;
 		float* texcoordBuffer = nullptr;
+		float* tangentBuffer = nullptr;
 	};
 };
 

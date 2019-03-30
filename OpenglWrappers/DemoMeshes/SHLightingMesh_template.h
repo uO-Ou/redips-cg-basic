@@ -53,7 +53,7 @@ namespace redips {
 					computeAndTransferShs(sample_number, save_to);
 				}
 			};
-
+			
 			SHLightingMesh(const redips::Triangles* model, std::string shfile, redips::ShaderSource shaderSource = redips::ShaderSource()) : glMeshWrapper(model, shaderSource, WrapOption::_genMipmap_) {
 				bindVaoAttribData(0, 1, 2);
 				if (shaderSource.sourceType == redips::ShaderSource::SourceType::_null_) {
@@ -88,7 +88,8 @@ namespace redips {
 			}
 
 			SHLightingMesh(const glMeshWrapper& another, redips::ShaderSource shaderSource = redips::ShaderSource()) = delete;
-
+			SHLightingMesh(const SHLightingMesh&) = delete;
+			
 			~SHLightingMesh() { 
 				glDeleteBuffers(mesh->groups.size(), vbos_4_shcoefs_gpu); 
 			}
