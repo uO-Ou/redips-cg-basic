@@ -236,6 +236,18 @@ namespace redips{
 		T* operator[] (std::size_t idx){ return m[idx]; };
 		const T* operator[] (std::size_t idx) const { return m[idx]; };
 
+		Mat33<T> operator+(const Mat33<T>& another) const {
+			Mat33<T> ret;
+			for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) ret[i][j] = m[i][j] + another[i][j];
+			return ret;
+		}
+
+		Mat33<T> operator*(T v) const {
+			Mat33<T> ret;
+			for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) ret[i][j] = m[i][j] * v;
+			return ret;
+		}
+
 		Mat33<T> operator* (const Mat33<T>& v) const{ Mat33<T> ret; for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++){ ret[i][j] = T(0); for (int k = 0; k < 3; k++) ret[i][j] += (m[i][k] * v[k][j]); } return ret; }
 		Vec3<T> operator* (const Vec3<T>& v) const{
 			Vec3<T> ret;
@@ -249,6 +261,60 @@ namespace redips{
 
 		Mat33<T> transpose() const{ Mat33<T> ret;  for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) ret[i][j] = m[j][i];  return ret; }
 		static Mat33<T> eye(){ Mat33<T> ret;	for (int i = 0; i < 3; ++i) ret[i][i] = T(1); return ret; };
+
+		T determinant() const {
+			return  m[0][0] * m[1][1] * m[2][2] + m[0][1] * m[1][2] * m[2][0] + m[1][0] * m[0][2] * m[2][1]
+				  - m[2][0] * m[1][1] * m[0][2] - m[0][1] * m[1][0] * m[2][2] - m[0][0] * m[1][2] * m[2][1];
+		}
+
+		bool equals(const Mat33<T>& another, double epsi = 1e-6) const {
+			for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) {
+				if (fabs(m[i][j] - another[i][j]) > epsi) return false;
+			}
+			return true;
+		}
+
+		Mat33<float> inverse() const {
+			auto det = determinant();
+			_RUNTIME_ASSERT_(fabs(det) > 1e-6, "fabs(det) > 1e-6");
+
+			float det_inv = 1.0 / det;
+
+			Mat33<float> ret;
+			ret[0][0] = (m[1][1] * m[2][2] - m[1][2] * m[2][1]) * det_inv;
+			ret[0][1] = (m[0][1] * m[2][2] - m[0][2] * m[2][1]) * -det_inv;
+			ret[0][2] = (m[0][1] * m[1][2] - m[0][2] * m[1][1]) * det_inv;
+
+			ret[1][0] = (m[1][0] * m[2][2] - m[1][2] * m[2][0]) * -det_inv;
+			ret[1][1] = (m[0][0] * m[2][2] - m[0][2] * m[2][0]) * det_inv;
+			ret[1][2] = (m[0][0] * m[1][2] - m[0][2] * m[1][0]) * -det_inv;
+
+			ret[2][0] = (m[1][0] * m[2][1] - m[1][1] * m[2][0]) * det_inv;
+			ret[2][1] = (m[0][0] * m[2][1] - m[0][1] * m[2][0]) * -det_inv;
+			ret[2][2] = (m[0][0] * m[1][1] - m[0][1] * m[1][0]) * det_inv;
+
+			//ret[0][0] = (m[1][1] * m[2][2] - m[2][1] * m[1][2]) * det_inv;
+			//ret[0][1] = (m[1][0] * m[2][2] - m[2][0] * m[1][2]) * -det_inv;
+			//ret[0][2] = (m[1][0] * m[2][1] - m[2][0] * m[1][1]) * det_inv;
+
+			//ret[1][0] = (m[0][1] * m[2][2] - m[2][1] * m[0][2]) * -det_inv;
+			//ret[1][1] = (m[0][0] * m[2][2] - m[2][0] * m[0][2]) * det_inv;
+			//ret[1][2] = (m[0][0] * m[2][1] - m[2][0] * m[0][1]) * -det_inv;
+
+			//ret[2][0] = (m[0][1] * m[1][2] - m[1][1] * m[0][2]) * det_inv;
+			//ret[2][1] = (m[0][0] * m[1][2] - m[1][0] * m[0][2]) * -det_inv;
+			//ret[2][2] = (m[0][0] * m[1][1] - m[1][0] * m[0][1]) * det_inv;
+
+			return ret;
+		}
+
+		static Mat33<T> scale(Vec3<T> s) {
+			Mat33<T> ret = Mat33<T>::eye();
+			ret[0][0] = s[0];
+			ret[1][1] = s[1];
+			ret[2][2] = s[2];
+			return ret;
+		}
 
 		//column-major transform
 		//rotate around x
@@ -335,6 +401,25 @@ namespace redips{
 		void setcol(const Vec4<T>& data, std::size_t idx){ for (int i = 0; i < 4; i++) m[i][idx] = data[i]; };
 		void setUpperLeft(const Mat33<T>& upperLeft){ for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) m[i][j] = upperLeft[i][j]; }
 		
+		void decompose(Vec3<float>& T, Mat33<float> &R, Vec3<float>& S) {
+			T[0] = m[0][3], T[1] = m[1][3], T[2] = m[2][3];
+
+			Mat33<float> M0 = *this;
+			while (true) {
+				auto M1 = (M0 + M0.transpose().inverse()) * 0.5;
+				if (M0.equals(M1)) break;
+				M0 = M1;
+			}
+
+			R = M0;
+
+			_RUNTIME_ASSERT_((M0*M0.transpose()).equals(Mat33<float>::eye()), "(M0*M0.transpose()).equals(eye())");
+
+			auto SM = R.transpose() * Mat33<float>(*this);
+			S[0] = SM[0][0], S[1] = SM[1][1], S[2] = SM[2][2];
+		}
+
+
 		//column-major transform
 		static Mat44<T> eye(){ Mat44<T> ret; for (int i = 0; i < 4; i++) ret[i][i] = T(1); return ret; }
 		static Mat44<T> translation(const float3& offset){
