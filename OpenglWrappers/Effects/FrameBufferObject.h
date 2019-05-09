@@ -49,7 +49,7 @@ namespace redips{
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
 
-		void bind4Writing() {
+		void bind4Writing(bool clear = true) {
 			if (!initialized) {
 				std::cerr << "[FrameBufferObject] : error, didn't initialized" << std::endl;
 				return;
@@ -57,8 +57,10 @@ namespace redips{
 			glGetIntegerv(GL_VIEWPORT, &m_ori_viewport[0]);
 			glViewport(0, 0, m_width, m_height);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboId);
-			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			if (clear) {
+				glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			}
 		}
 		void bind4Reading() {
 			if (!initialized) {

@@ -176,6 +176,10 @@ namespace redips{
 			Use();
 			glUniform3f(glGetUniformLocation(Program, name), value.x, value.y, value.z);
 		}
+		void uniformFloat4(const char* name, const redips::float4& value) {
+			Use();
+			glUniform4f(glGetUniformLocation(Program, name), value.x, value.y, value.z, value.w);
+		}
 		void uniformFloat2(const char* name, const redips::float2& value){
 			Use();
 			glUniform2f(glGetUniformLocation(Program, name), value.x, value.y);

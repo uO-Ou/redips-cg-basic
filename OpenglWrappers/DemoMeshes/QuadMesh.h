@@ -12,7 +12,7 @@ namespace redips{
 	class QuadMesh{
 		GLuint quardVao = 0, quardVbo = 0;
 
-		Shader shader;
+		
 		void useShader(const redips::ShaderSource& source){
 			if (source.sourceType == ShaderSource::SourceType::_exists_program_){
 				shader = Shader(source.value.program);
@@ -24,6 +24,7 @@ namespace redips{
 
 		std::map<int, GLuint> binded_textures;
 	public:
+		Shader shader;
 		QuadMesh(std::string shader_path = std::string(_REDIPS_ROOT_PATH_)+"/OpenglWrappers/DemoMeshes/QuadMesh"){
 			float data[] = { -1.0f, 1.0f, 0.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f };
 			glGenBuffers(1, &quardVbo);
